@@ -1,16 +1,16 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-
-// Importa o arquivo de rotas e o provedor
 import Routes from './src/navigation'; 
 import { UserProvider } from './src/contexts/UserContext';
+import { AccessibilityProvider } from './src/contexts/AccessibilityContext'; // <--- Importe
 
 export default function App() {
   return (
-    // O Provider envolve as Rotas para que todas as telas tenham acesso ao login
     <UserProvider>
-      <StatusBar style="auto" />
-      <Routes />
+      <AccessibilityProvider> 
+        <StatusBar style="auto" />
+        <Routes />
+      </AccessibilityProvider>
     </UserProvider>
   );
 }
