@@ -1,15 +1,16 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import Routes from './src/navigation'; // Importa o nosso roteador principal
+
+// Importa o arquivo de rotas e o provedor
+import Routes from './src/navigation'; 
+import { UserProvider } from './src/contexts/UserContext';
 
 export default function App() {
   return (
-    <>
-      {/* Configura a barra de status do celular */}
+    // O Provider envolve as Rotas para que todas as telas tenham acesso ao login
+    <UserProvider>
       <StatusBar style="auto" />
-      
-      {/* Renderiza as rotas */}
       <Routes />
-    </>
+    </UserProvider>
   );
 }

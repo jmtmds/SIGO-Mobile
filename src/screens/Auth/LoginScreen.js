@@ -8,23 +8,59 @@ import {
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
-  ScrollView
+  ScrollView,
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Ionicons } from '@expo/vector-icons'; // Para o ícone de voltar
+import { Ionicons } from '@expo/vector-icons'; 
 
-// Importe o seu Logo aqui
+// Importa o serviço de API
+import { loginUser } from '../../services/authService';
+
+// Importa o Contexto de Usuário (A MUDANÇA IMPORTANTE ESTÁ AQUI)
+import { useUser } from '../../contexts/UserContext';
+
+// Importe o seu Logo
 import Logo from '../../assets/logo.svg'; 
 
 export default function LoginScreen({ navigation }) {
   const [matricula, setMatricula] = useState('');
   const [senha, setSenha] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Pega a função signIn do contexto
+  const { signIn } = useUser(); 
+
+  const handleLogin = async () => {
+    // 1. Validação simples
+    if (!matricula || !senha) {
+      Alert.alert('Atenção', 'Por favor, preencha matrícula e senha.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // 2. Tenta fazer login na API
+      await loginUser(matricula, senha);
+      
+      // 3. Se a API não deu erro, atualizamos o estado global
+      // Isso fará a tela mudar automaticamente para o Dashboard
+      signIn({ matricula: matricula }); 
+      
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erro de Acesso', 'Verifique suas credenciais.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       
-      {/* KeyboardAvoidingView ajuda o teclado não cobrir os campos */}
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
@@ -36,13 +72,11 @@ export default function LoginScreen({ navigation }) {
             <Ionicons name="chevron-back" size={24} color="#333" />
           </TouchableOpacity>
 
-          {/* Cabeçalho com Logo e Título */}
+          {/* Cabeçalho */}
           <View style={styles.header}>
             <View style={styles.logoContainer}>
-               {/* Ajuste o tamanho conforme necessário */}
                <Logo width={300} height={300} /> 
             </View>
-            
             <Text style={styles.welcomeText}>Bem-vindo!</Text>
             <Text style={styles.instructionText}>
               Digite sua Matrícula para acessar o sistema
@@ -51,7 +85,6 @@ export default function LoginScreen({ navigation }) {
 
           {/* Formulário */}
           <View style={styles.form}>
-            
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Matrícula</Text>
               <TextInput
@@ -61,6 +94,7 @@ export default function LoginScreen({ navigation }) {
                 value={matricula}
                 onChangeText={setMatricula}
                 keyboardType="numeric"
+                autoCapitalize="none"
               />
             </View>
 
@@ -78,12 +112,15 @@ export default function LoginScreen({ navigation }) {
 
             <TouchableOpacity 
               style={styles.loginButton} 
-              onPress={() => alert('Lógica de Login')}
+              onPress={handleLogin}
+              disabled={isLoading}
             >
-              <Text style={styles.loginButtonText}>Entrar</Text>
+              {isLoading ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <Text style={styles.loginButtonText}>Entrar</Text>
+              )}
             </TouchableOpacity>
-
-        
           </View>
 
         </ScrollView>
@@ -100,6 +137,7 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     padding: 24,
+    justifyContent: 'center',
   },
   backButton: {
     marginBottom: 24,
@@ -109,23 +147,22 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   header: {
-    alignItems: 'center', // Centraliza tudo no header
+    alignItems: 'center', 
     marginBottom: 40,
   },
   logoContainer: {
     marginBottom: 6,
-    // Adicione sombra se quiser destacar o logo
   },
   welcomeText: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#314697', // Azul Escuro do SIGO
+    color: '#314697', 
     marginBottom: 8,
     textAlign: 'center',
   },
   instructionText: {
     fontSize: 16,
-    color: '#6B7280', // Cinza médio
+    color: '#6B7280', 
     textAlign: 'center',
     paddingHorizontal: 20,
   },
@@ -138,15 +175,15 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#374151', // Cinza escuro
+    color: '#374151', 
     marginBottom: 8,
     marginLeft: 4,
   },
   input: {
-    backgroundColor: '#F3F4F6', // Fundo cinza bem claro
+    backgroundColor: '#F3F4F6', 
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    borderRadius: 12, // Bordas bem arredondadas
+    borderRadius: 12, 
     padding: 16,
     fontSize: 16,
     color: '#1F2937',
@@ -161,7 +198,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
-    elevation: 4, // Sombra no Android
+    elevation: 4, 
   },
   loginButtonText: {
     color: '#FFFFFF',
