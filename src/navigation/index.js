@@ -1,15 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
+
+// Importe seus navegadores (certifique-se que os caminhos estão corretos)
 import AuthNavigator from './AuthNavigator';
 import AppNavigator from './AppNavigator';
 
+// Importa o hook do UserContext que acabamos de criar
+import { useUser } from '../contexts/UserContext'; 
+
 export default function Routes() {
-  // TODO: Substituir isso pelo UserContext futuramente
-  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false); 
+  // Pega a variável 'signed' do contexto
+  const { signed } = useUser(); 
 
   return (
     <NavigationContainer>
-      {isUserLoggedIn ? <AppNavigator /> : <AuthNavigator />}
+      {/* Se signed for true, mostra o App (Dashboard). Se false, mostra Auth (Login) */}
+      {signed ? <AppNavigator /> : <AuthNavigator />}
     </NavigationContainer>
   );
 }
