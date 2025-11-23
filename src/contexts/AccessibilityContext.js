@@ -6,29 +6,32 @@ export const AccessibilityProvider = ({ children }) => {
   // Estados de acessibilidade
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [highContrast, setHighContrast] = useState(false);
-  const [fontSizeLevel, setFontSizeLevel] = useState(1); // 1 = Normal, 1.2 = Grande
+  const [fontSizeLevel, setFontSizeLevel] = useState(1); 
 
-  // Definição das Cores Dinâmicas
+  // Lógica de Cores Blindada
+  // Se Alto Contraste estiver ligado, ele ignora o Dark Mode e força o tema acessível
   const theme = {
-    background: isDarkMode ? '#121212' : '#FFFFFF',
-    text: isDarkMode ? '#FFFFFF' : '#333333',
-    textSecondary: isDarkMode ? '#BBBBBB' : '#666666',
-    primary: isDarkMode ? '#5c7cfa' : '#314697', // Azul mais claro no escuro para contraste
-    cardBackground: isDarkMode ? '#1E1E1E' : '#F1F4FF',
-    inputBackground: isDarkMode ? '#2C2C2C' : '#F1F4FF',
-    border: isDarkMode ? '#333333' : '#E0E0E0',
-    headerBackground: isDarkMode ? '#000000' : '#FFFFFF',
-    statusBarStyle: isDarkMode ? 'light' : 'dark',
+    background: highContrast ? '#000000' : (isDarkMode ? '#121212' : '#FFFFFF'),
+    
+    text: highContrast ? '#FFFF00' : (isDarkMode ? '#FFFFFF' : '#333333'),
+    
+    textSecondary: highContrast ? '#FFFF00' : (isDarkMode ? '#BBBBBB' : '#666666'),
+    
+    primary: highContrast ? '#FFD700' : (isDarkMode ? '#5c7cfa' : '#314697'), 
+    
+    cardBackground: highContrast ? '#000000' : (isDarkMode ? '#1E1E1E' : '#F1F4FF'),
+    
+    inputBackground: highContrast ? '#000000' : (isDarkMode ? '#2C2C2C' : '#F1F4FF'),
+    
+    border: highContrast ? '#FFFF00' : (isDarkMode ? '#333333' : '#E0E0E0'), // Borda amarela no contraste para destacar
+    
+    headerBackground: highContrast ? '#000000' : (isDarkMode ? '#1E1E1E' : '#FFFFFF'),
+    
+    statusBarStyle: (highContrast || isDarkMode) ? 'light' : 'dark',
+    
+    // Cor extra para elementos selecionados ou focados
+    highlight: highContrast ? '#FFFF00' : (isDarkMode ? '#5c7cfa' : '#314697')
   };
-
-  // Se Alto Contraste estiver ativado, sobrescreve algumas cores
-  if (highContrast) {
-    theme.background = '#000000';
-    theme.text = '#FFFF00'; // Amarelo no preto
-    theme.primary = '#FFFFFF';
-    theme.cardBackground = '#000000';
-    theme.border = '#FFFFFF';
-  }
 
   return (
     <AccessibilityContext.Provider 

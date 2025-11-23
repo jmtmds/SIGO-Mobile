@@ -9,7 +9,6 @@ export default function DashboardScreen({ navigation }) {
   const { user, signOut } = useUser();
   const { theme, fontSizeLevel } = useTheme();
 
-  // Função auxiliar para gerar estilo de texto dinâmico
   const dynamicText = (size, weight = 'normal', color = theme.text) => ({
     fontSize: size * fontSizeLevel,
     fontWeight: weight,
@@ -21,7 +20,7 @@ export default function DashboardScreen({ navigation }) {
       <StatusBar style={theme.statusBarStyle} />
 
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.headerBackground }]}>
+      <View style={[styles.header, { backgroundColor: theme.headerBackground, borderBottomColor: theme.border, borderBottomWidth: 1 }]}>
         <View>
           <Text style={dynamicText(22, 'bold', theme.primary)}>Olá, {user?.name || 'Bombeiro'}</Text>
           <Text style={dynamicText(14, 'normal', theme.textSecondary)}>Bem-vindo ao SIGO Mobile</Text>
@@ -33,13 +32,21 @@ export default function DashboardScreen({ navigation }) {
 
       <ScrollView contentContainerStyle={styles.content}>
         
-        {/* Card: Registrar Ocorrência */}
+        {/* Card Grande: Adicionei borderWidth dinâmico para aparecer no preto */}
         <TouchableOpacity 
-          style={[styles.bigCard, { backgroundColor: theme.cardBackground, borderColor: theme.primary }]}
+          style={[
+            styles.bigCard, 
+            { 
+              backgroundColor: theme.cardBackground, 
+              borderColor: theme.primary, // Borda colorida no card principal
+              borderWidth: 2 
+            }
+          ]}
           onPress={() => navigation.navigate('IncidentRegistration')}
         >
           <View style={[styles.iconCircle, { backgroundColor: theme.primary }]}>
-             <Ionicons name="add" size={40} color="#FFF" />
+             {/* Ícone precisa ser preto se o fundo for amarelo (alto contraste) ou branco se for azul */}
+             <Ionicons name="add" size={40} color={theme.background === '#000000' ? '#000' : '#FFF'} />
           </View>
           <Text style={[styles.cardTitle, dynamicText(18, 'bold', theme.text)]}>
             Registrar Ocorrência
@@ -49,18 +56,33 @@ export default function DashboardScreen({ navigation }) {
           </Text>
         </TouchableOpacity>
 
-        {/* Linha com 2 Cards menores */}
         <View style={styles.row}>
+          {/* Card Pequeno 1 */}
           <TouchableOpacity 
-            style={[styles.smallCard, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
+            style={[
+              styles.smallCard, 
+              { 
+                backgroundColor: theme.cardBackground, 
+                borderColor: theme.border, // Usa a borda do tema (Amarela no contraste)
+                borderWidth: 1 
+              }
+            ]}
             onPress={() => navigation.navigate('MyIncidents')}
           >
             <Ionicons name="list" size={32} color={theme.primary} />
             <Text style={[styles.smallCardTitle, dynamicText(16, 'bold', theme.text)]}>Minhas Ocorrências</Text>
           </TouchableOpacity>
 
+          {/* Card Pequeno 2 */}
           <TouchableOpacity 
-            style={[styles.smallCard, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
+            style={[
+              styles.smallCard, 
+              { 
+                backgroundColor: theme.cardBackground, 
+                borderColor: theme.border,
+                borderWidth: 1 
+              }
+            ]}
             onPress={() => navigation.navigate('SettingsMenu')}
           >
             <Ionicons name="settings-outline" size={32} color={theme.primary} />
@@ -82,20 +104,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    elevation: 2, // Sombra Android
-    shadowColor: '#000', // Sombra iOS
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
+    // Removemos sombras fixas e deixamos o estilo inline cuidar da borda
   },
   content: { padding: 24 },
   bigCard: {
     width: '100%',
     padding: 24,
     borderRadius: 16,
-    borderWidth: 1,
     alignItems: 'center',
     marginBottom: 20,
-    elevation: 2,
   },
   iconCircle: {
     width: 64,
@@ -116,11 +133,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     borderRadius: 16,
-    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     height: 140,
-    elevation: 1,
   },
   smallCardTitle: {
     marginTop: 12,
