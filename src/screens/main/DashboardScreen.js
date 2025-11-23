@@ -7,6 +7,7 @@ import { useTheme } from '../../contexts/AccessibilityContext';
 
 import carlosImg from '../../assets/Carlos.jpg'; 
 
+// ActionCard atualizado com Rolagem Lateral no Texto
 const ActionCard = ({ title, subtitle, icon, onPress, isPrimary = false, theme, highContrast, dynamicText }) => (
   <TouchableOpacity 
     style={[
@@ -20,17 +21,26 @@ const ActionCard = ({ title, subtitle, icon, onPress, isPrimary = false, theme, 
     onPress={onPress}
     activeOpacity={0.8}
   >
-    <View style={styles.actionContent}>
-      <View style={[
-        styles.iconCircle, 
-        { backgroundColor: isPrimary ? 'rgba(255,255,255,0.2)' : theme.inputBackground }
-      ]}>
-         <Ionicons 
-           name={icon} 
-           size={24} 
-           color={isPrimary ? (highContrast ? '#000' : '#FFF') : theme.primary} 
-         />
-      </View>
+    {/* 1. Ícone Fixo na Esquerda */}
+    <View style={[
+      styles.iconCircle, 
+      { backgroundColor: isPrimary ? 'rgba(255,255,255,0.2)' : theme.inputBackground }
+    ]}>
+       <Ionicons 
+         name={icon} 
+         size={24} 
+         color={isPrimary ? (highContrast ? '#000' : '#FFF') : theme.primary} 
+       />
+    </View>
+
+    {/* 2. Texto com Rolagem Lateral (Ocupa o meio) */}
+    <ScrollView 
+      horizontal 
+      showsHorizontalScrollIndicator={true} // Mostra a barra lateral
+      persistentScrollbar={true}            // Tenta manter a barra visível (Android)
+      style={styles.textScroll}
+      contentContainerStyle={{ paddingRight: 10 }} // Espaço extra no fim do scroll
+    >
       <View>
         <Text style={dynamicText(16, 'bold', isPrimary ? (highContrast ? '#000' : '#FFF') : theme.text)}>
           {title}
@@ -41,11 +51,14 @@ const ActionCard = ({ title, subtitle, icon, onPress, isPrimary = false, theme, 
           </Text>
         )}
       </View>
-    </View>
+    </ScrollView>
+
+    {/* 3. Seta Fixa na Direita */}
     <Ionicons 
       name="chevron-forward" 
       size={24} 
-      color={isPrimary ? (highContrast ? '#000' : '#FFF') : theme.textSecondary} 
+      color={isPrimary ? (highContrast ? '#000' : '#FFF') : theme.textSecondary}
+      style={{ marginLeft: 8 }} 
     />
   </TouchableOpacity>
 );
@@ -73,19 +86,26 @@ export default function DashboardScreen({ navigation }) {
             style={[styles.profileImage, { borderColor: theme.primary }]} 
           />
           
-          <View style={styles.profileTextContainer}>
-            <Text style={dynamicText(14, 'normal', theme.textSecondary)}>
-              Bem-vindo de volta,
-            </Text>
-            
-            <Text style={dynamicText(24, 'bold', theme.text)}>
-              {user?.name || 'Carlos Ferreira'}
-            </Text>
-            
-            <Text style={[styles.roleBadge, dynamicText(15, '600', theme.primary)]}>
-              {user?.role || '2º Tenente'}
-            </Text>
-          </View>
+          {/* Texto do Perfil com Scroll também, caso aumente muito */}
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={true}
+            style={styles.profileTextScroll}
+          >
+            <View style={styles.profileTextContainer}>
+              <Text style={dynamicText(14, 'normal', theme.textSecondary)}>
+                Bem-vindo de volta,
+              </Text>
+              
+              <Text style={dynamicText(24, 'bold', theme.text)}>
+                {user?.name || 'Carlos Ferreira'}
+              </Text>
+              
+              <Text style={[styles.roleBadge, dynamicText(15, '600', theme.primary)]}>
+                {user?.role || '2º Tenente'}
+              </Text>
+            </View>
+          </ScrollView>
         </View>
 
         {/* Linha Divisória */}
@@ -147,6 +167,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   
+  // Perfil
   profileContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -158,10 +179,13 @@ const styles = StyleSheet.create({
     height: 85,
     borderRadius: 22, 
     borderWidth: 2,
+    flexShrink: 0, // Impede que a imagem encolha
+  },
+  profileTextScroll: {
+    flex: 1, // Ocupa o resto do espaço lateral
   },
   profileTextContainer: {
     justifyContent: 'center',
-    flex: 1,
   },
   roleBadge: {
     marginTop: 2,
@@ -174,6 +198,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   
+  // Widget Status
   statusContainer: {
     flexDirection: 'row',
     borderRadius: 16,
@@ -190,8 +215,9 @@ const styles = StyleSheet.create({
     height: '80%',
   },
   
+  // Ações
   actionsList: {
-    gap: 16, // Isso garante o espaçamento igual entre TODOS os botões
+    gap: 16,
   },
   sectionTitle: {
     marginBottom: 8,
@@ -204,12 +230,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 20,
     borderRadius: 16,
-    // Removido marginBottom manual para usar apenas o gap
-  },
-  actionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
+    // Altura mínima garante que não fique espremido se tiver barra de rolagem
+    minHeight: 90, 
   },
   iconCircle: {
     width: 48,
@@ -217,5 +239,10 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
+    flexShrink: 0, // Impede o ícone de esmagar
+    marginRight: 16,
+  },
+  textScroll: {
+    flex: 1, // Ocupa todo o espaço disponível entre ícone e seta
   },
 });
