@@ -10,6 +10,9 @@ import DashboardScreen from '../screens/Main/DashboardScreen';
 import SettingsMenuScreen from '../screens/Main/Settings/SettingsMenuScreen';
 import AccessibilityScreen from '../screens/Main/Settings/AccessibilityScreen';
 
+// 1. IMPORTE A NOVA TELA AQUI
+import MyIncidentsScreen from '../screens/Main/MyIncidentsScreen';
+
 const Stack = createStackNavigator();
 
 export default function AppNavigator() {
@@ -19,30 +22,26 @@ export default function AppNavigator() {
   return (
     <Stack.Navigator
       screenOptions={({ navigation }) => ({
-        // Estilo da Barra Fixa
         headerStyle: {
           backgroundColor: theme.headerBackground,
-          elevation: 0, // Sem sombra no Android
-          shadowOpacity: 0, // Sem sombra no iOS
+          elevation: 0,
+          shadowOpacity: 0,
           borderBottomWidth: 1,
           borderBottomColor: theme.border,
         },
-        headerTintColor: theme.primary, // Cor Azul para tudo
+        headerTintColor: theme.primary, 
         headerTitleStyle: { 
           fontWeight: 'bold',
           color: theme.primary 
         },
         headerTitleAlign: 'center',
         
-        // --- MUDANÇA AQUI: Ícone de Voltar (Chevron) ---
         headerLeft: ({ canGoBack }) => canGoBack ? (
           <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginLeft: 16 }}>
-            {/* Trocamos 'arrow-back' por 'chevron-back' */}
             <Ionicons name="chevron-back" size={28} color={theme.primary} />
           </TouchableOpacity>
         ) : null,
 
-        // Ícone da Casa na direita (Padrão)
         headerRight: () => (
           <TouchableOpacity 
             onPress={() => navigation.navigate('Dashboard')} 
@@ -58,18 +57,23 @@ export default function AppNavigator() {
         component={DashboardScreen} 
         options={{ 
           title: 'SIGO Mobile',
-          // Dashboard não tem botão Home na direita
           headerRight: () => null,
-          // Dashboard tem botão Sair na esquerda (parecido com voltar, mas sai)
           headerLeft: () => (
             <TouchableOpacity onPress={signOut} style={{ marginLeft: 16 }}>
-              {/* Ícone de Sair espelhado para parecer que está saindo 'para trás' */}
               <Ionicons name="log-out-outline" size={28} color={theme.primary} style={{ transform: [{ scaleX: -1 }] }} /> 
             </TouchableOpacity>
           ),
         }} 
       />
       
+      {/* 2. ATUALIZE A ROTA AQUI (Troque DashboardScreen por MyIncidentsScreen) */}
+      <Stack.Screen 
+        name="MyIncidents" 
+        component={MyIncidentsScreen} 
+        options={{ title: 'Minhas Ocorrências' }} 
+      />
+
+      {/* Configurações */}
       <Stack.Screen 
         name="SettingsMenu" 
         component={SettingsMenuScreen} 
@@ -81,9 +85,8 @@ export default function AppNavigator() {
         options={{ title: 'Acessibilidade' }} 
       />
       
-      {/* Rotas Placeholder */}
+      {/* Rotas Placeholder (Ainda apontando para Dashboard até criarmos) */}
       <Stack.Screen name="IncidentRegistration" component={DashboardScreen} options={{title: 'Nova Ocorrência'}}/>
-      <Stack.Screen name="MyIncidents" component={DashboardScreen} options={{title: 'Minhas Ocorrências'}}/>
       <Stack.Screen name="EditProfile" component={DashboardScreen} options={{title: 'Editar Perfil'}}/>
       <Stack.Screen name="Notifications" component={DashboardScreen} options={{title: 'Notificações'}}/>
       <Stack.Screen name="ChangePassword" component={DashboardScreen} options={{title: 'Segurança'}}/>
