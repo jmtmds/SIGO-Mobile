@@ -6,9 +6,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/AccessibilityContext';
 import { useUser } from '../contexts/UserContext'; 
 
-import DashboardScreen from '../screens/main/DashboardScreen';
-import SettingsMenuScreen from '../screens/main/Settings/SettingsMenuScreen';
-import AccessibilityScreen from '../screens/main/Settings/AccessibilityScreen';
+import DashboardScreen from '../screens/Main/DashboardScreen';
+import SettingsMenuScreen from '../screens/Main/Settings/SettingsMenuScreen';
+import AccessibilityScreen from '../screens/Main/Settings/AccessibilityScreen';
 
 // 1. IMPORTE A NOVA TELA AQUI
 import MyIncidentsScreen from '../screens/Main/MyIncidentsScreen';
