@@ -1,28 +1,26 @@
 import React, { useState } from 'react';
 import { 
   View, Text, StyleSheet, ScrollView, TouchableOpacity, 
-  TextInput, Alert, ActivityIndicator 
+  TextInput, Alert, ActivityIndicator, Modal, FlatList 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/AccessibilityContext';
 import { useUser } from '../../contexts/UserContext';
 
-// Importe o serviço que criaremos no próximo passo
 import { registerIncident } from '../../services/OcorrenciasService';
 
 export default function IncidentRegistrationScreen({ navigation }) {
   const { theme, fontSizeLevel, highContrast } = useTheme();
-  const { user } = useUser();
-
+  
   const [loading, setLoading] = useState(false);
   
   // Estados do Formulário
   const [formData, setFormData] = useState({
     endereco: '',
     pontoReferencia: '',
-    tipo: '',       // categoria (fire, traffic_accident...)
-    subtipo: '',    // subcategoria (residential, collision...)
-    prioridade: 'low',
+    tipo: '',
+    subtipo: '',    
+    prioridade: '', // Começa vazio para obrigar escolha
     descricao: '',
     codigoViatura: '',
   });
@@ -33,11 +31,12 @@ export default function IncidentRegistrationScreen({ navigation }) {
     color: color
   });
 
-  // Opções para os Selects (Simplificado para teste)
+  // Opções (Labels para exibição, Values para o backend)
   const tiposOcorrencia = [
     { label: 'Incêndio', value: 'fire' },
     { label: 'Acidente de Trânsito', value: 'traffic_accident' },
     { label: 'Emergência Médica', value: 'medic_emergency' },
+    { label: 'Salvamento / Resgate', value: 'rescue' },
     { label: 'Outros', value: 'other' },
   ];
 
@@ -48,21 +47,19 @@ export default function IncidentRegistrationScreen({ navigation }) {
   ];
 
   const handleRegister = async () => {
-    // Validação Básica
-    if (!formData.endereco || !formData.tipo || !formData.codigoViatura) {
-      Alert.alert('Campos Obrigatórios', 'Preencha Endereço, Tipo e Viatura.');
+    // Validação
+    if (!formData.endereco || !formData.tipo || !formData.prioridade || !formData.codigoViatura) {
+      Alert.alert('Campos Obrigatórios', 'Preencha Endereço, Tipo, Prioridade e Viatura.');
       return;
     }
 
     setLoading(true);
 
     try {
-      // Monta o objeto para enviar
       const payload = {
         ...formData,
-        // Garante campos que o backend exige
-        gps: [0, 0], // Placeholder até implementarmos GPS real
-        idEquipes: [] // O backend pode exigir, enviamos vazio por enquanto
+        gps: [0, 0], 
+        idEquipes: [] 
       };
 
       await registerIncident(payload);
@@ -78,7 +75,9 @@ export default function IncidentRegistrationScreen({ navigation }) {
     }
   };
 
-  // Componente de Input Reutilizável localmente
+  // --- COMPONENTES AUXILIARES ---
+
+  // 1. Input de Texto Comum
   const FormInput = ({ label, value, onChangeText, placeholder, multiline = false }) => (
     <View style={styles.inputGroup}>
       <Text style={[styles.label, dynamicText(14, '600', theme.text)]}>{label}</Text>
@@ -88,8 +87,8 @@ export default function IncidentRegistrationScreen({ navigation }) {
           { 
             backgroundColor: theme.inputBackground, 
             color: theme.text,
-            borderColor: highContrast ? theme.border : 'transparent',
-            borderWidth: highContrast ? 1 : 0,
+            borderColor: highContrast ? theme.border : theme.border,
+            borderWidth: 1,
             height: multiline ? 100 : 50,
             textAlignVertical: multiline ? 'top' : 'center'
           }
@@ -103,32 +102,93 @@ export default function IncidentRegistrationScreen({ navigation }) {
     </View>
   );
 
-  // Componente de Seleção Simples (Botões)
-  const FormSelector = ({ label, options, selectedValue, onSelect }) => (
-    <View style={styles.inputGroup}>
-      <Text style={[styles.label, dynamicText(14, '600', theme.text)]}>{label}</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.selectorScroll}>
-        {options.map((opt) => (
-          <TouchableOpacity
-            key={opt.value}
-            style={[
-              styles.selectorOption,
-              selectedValue === opt.value && { backgroundColor: theme.primary },
-              { borderColor: theme.primary }
-            ]}
-            onPress={() => onSelect(opt.value)}
-          >
-            <Text style={{ 
-              color: selectedValue === opt.value ? (highContrast ? '#000' : '#FFF') : theme.primary,
-              fontWeight: '600'
-            }}>
-              {opt.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    </View>
-  );
+  // 2. Dropdown Customizado (Modal)
+  const CustomDropdown = ({ label, options, selectedValue, onSelect, placeholder }) => {
+    const [modalVisible, setModalVisible] = useState(false);
+
+    // Encontra o label correspondente ao valor selecionado
+    const selectedLabel = options.find(o => o.value === selectedValue)?.label;
+
+    return (
+      <View style={styles.inputGroup}>
+        <Text style={[styles.label, dynamicText(14, '600', theme.text)]}>{label}</Text>
+        
+        {/* Botão que parece um Input */}
+        <TouchableOpacity
+          style={[
+            styles.input, 
+            { 
+              backgroundColor: theme.inputBackground, 
+              borderColor: highContrast ? theme.border : theme.border,
+              borderWidth: 1,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }
+          ]}
+          onPress={() => setModalVisible(true)}
+        >
+          <Text style={{ 
+            color: selectedLabel ? theme.text : theme.textSecondary,
+            fontSize: 16 * fontSizeLevel
+          }}>
+            {selectedLabel || placeholder}
+          </Text>
+          <Ionicons name="chevron-down" size={20} color={theme.textSecondary} />
+        </TouchableOpacity>
+
+        {/* Modal de Seleção */}
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, { backgroundColor: theme.cardBackground, borderColor: theme.border, borderWidth: 1 }]}>
+              <Text style={[styles.modalTitle, { color: theme.primary }]}>Selecione uma opção</Text>
+              
+              <FlatList
+                data={options}
+                keyExtractor={(item) => item.value}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[
+                      styles.modalItem, 
+                      { borderBottomColor: theme.border },
+                      item.value === selectedValue && { backgroundColor: theme.inputBackground }
+                    ]}
+                    onPress={() => {
+                      onSelect(item.value);
+                      setModalVisible(false);
+                    }}
+                  >
+                    <Text style={{ 
+                      color: item.value === selectedValue ? theme.primary : theme.text,
+                      fontWeight: item.value === selectedValue ? 'bold' : 'normal',
+                      fontSize: 16 * fontSizeLevel
+                    }}>
+                      {item.label}
+                    </Text>
+                    {item.value === selectedValue && (
+                      <Ionicons name="checkmark" size={20} color={theme.primary} />
+                    )}
+                  </TouchableOpacity>
+                )}
+              />
+              
+              <TouchableOpacity 
+                style={[styles.modalCloseButton, { backgroundColor: theme.primary }]}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={{ color: highContrast ? '#000' : '#FFF', fontWeight: 'bold' }}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </View>
+    );
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
@@ -152,15 +212,19 @@ export default function IncidentRegistrationScreen({ navigation }) {
           onChangeText={(text) => setFormData({...formData, pontoReferencia: text})}
         />
 
-        <FormSelector 
+        {/* Dropdown Tipo */}
+        <CustomDropdown 
           label="Tipo *" 
+          placeholder="Selecione o tipo..."
           options={tiposOcorrencia} 
           selectedValue={formData.tipo}
           onSelect={(val) => setFormData({...formData, tipo: val})}
         />
 
-        <FormSelector 
+        {/* Dropdown Prioridade */}
+        <CustomDropdown 
           label="Prioridade *" 
+          placeholder="Selecione a prioridade..."
           options={prioridades} 
           selectedValue={formData.prioridade}
           onSelect={(val) => setFormData({...formData, prioridade: val})}
@@ -181,7 +245,6 @@ export default function IncidentRegistrationScreen({ navigation }) {
           multiline
         />
 
-        {/* Botão de Salvar */}
         <TouchableOpacity 
           style={[
             styles.submitButton, 
@@ -210,23 +273,20 @@ export default function IncidentRegistrationScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scrollContent: { padding: 24 },
-  sectionTitle: { marginBottom: 20 },
+  scrollContent: { padding: 24, paddingBottom: 50 },
+  sectionTitle: { marginBottom: 24 },
   inputGroup: { marginBottom: 20 },
   label: { marginBottom: 8 },
+  
+  // Estilo compartilhado entre Input e Botão do Dropdown
   input: {
-    borderRadius: 8,
+    borderRadius: 12, // Mais arredondado conforme design
     paddingHorizontal: 16,
     fontSize: 16,
+    height: 50,
+    justifyContent: 'center',
   },
-  selectorScroll: { flexDirection: 'row' },
-  selectorOption: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    borderWidth: 1,
-    marginRight: 10,
-  },
+  
   submitButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -234,7 +294,47 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     gap: 10,
-    marginTop: 20,
+    marginTop: 10,
     marginBottom: 40,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+
+  // Estilos do Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '100%',
+    maxHeight: '70%',
+    borderRadius: 16,
+    padding: 20,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalItem: {
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  modalCloseButton: {
+    marginTop: 20,
+    padding: 14,
+    borderRadius: 10,
+    alignItems: 'center',
   },
 });
