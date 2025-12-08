@@ -10,7 +10,7 @@ export const loginUser = async (matricula, senha) => {
 
     const response = await fetch(`${API_URL}/user/login`, {
       method: 'POST',
-      headers: {
+      headers: { 
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       credentials: 'include', // <--- IMPORTANTE: Aceita o cookie do backend

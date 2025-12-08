@@ -1,8 +1,19 @@
 import React, { useState, useRef } from 'react';
-import { 
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, 
-  TextInput, Alert, ActivityIndicator, Modal, FlatList, Image,
-  KeyboardAvoidingView, Platform, SafeAreaView
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Alert,
+  ActivityIndicator,
+  Modal,
+  FlatList,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
@@ -22,8 +33,8 @@ const FormInput = ({ label, value, onChangeText, placeholder, multiline = false,
     <Text style={[styles.label, dynamicText(14, '600', theme.text)]}>{label}</Text>
     <TextInput
       style={[
-        styles.input, 
-        { 
+        styles.input,
+        {
           backgroundColor: editable ? theme.inputBackground : (highContrast ? '#000' : '#E0E0E0'),
           color: theme.text,
           borderColor: highContrast ? theme.border : theme.border,
@@ -53,9 +64,9 @@ const CustomDropdown = ({ label, options, selectedValue, onSelect, placeholder, 
       <Text style={[styles.label, dynamicText(14, '600', theme.text)]}>{label}</Text>
       <TouchableOpacity
         style={[
-          styles.input, 
-          { 
-            backgroundColor: theme.inputBackground, 
+          styles.input,
+          {
+            backgroundColor: theme.inputBackground,
             borderColor: highContrast ? theme.border : theme.border,
             borderWidth: 1,
             flexDirection: 'row',
@@ -106,12 +117,12 @@ const CustomDropdown = ({ label, options, selectedValue, onSelect, placeholder, 
 export default function IncidentRegistrationScreen({ navigation }) {
   const { theme, fontSizeLevel, highContrast, isDarkMode } = useTheme();
   const { user } = useUser();
-  
+
   const [loading, setLoading] = useState(false);
   const [gpsLoading, setGpsLoading] = useState(false);
-  
+
   const [photos, setPhotos] = useState([]);
-  const [signature, setSignature] = useState(null); 
+  const [signature, setSignature] = useState(null);
   const [isSignatureModalVisible, setIsSignatureModalVisible] = useState(false);
   const signatureRef = useRef();
 
@@ -119,7 +130,7 @@ export default function IncidentRegistrationScreen({ navigation }) {
     endereco: '',
     pontoReferencia: '',
     tipo: '',
-    subtipo: '',    
+    subtipo: '',
     prioridade: '',
     descricao: '',
     codigoViatura: '',
@@ -164,7 +175,7 @@ export default function IncidentRegistrationScreen({ navigation }) {
           longitude: location.coords.longitude
         }
       }));
-      
+
       try {
         let address = await Location.reverseGeocodeAsync({
           latitude: location.coords.latitude,
@@ -191,11 +202,10 @@ export default function IncidentRegistrationScreen({ navigation }) {
   const handlePickImage = async (useCamera = false) => {
     try {
       let result;
-      // Opções da câmera/galeria
       const options = {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         quality: 0.5,
-        base64: true, // IMPORTANTE: Isso garante que a imagem venha convertida para salvar no PDF
+        base64: true,
       };
 
       if (useCamera) {
@@ -217,7 +227,6 @@ export default function IncidentRegistrationScreen({ navigation }) {
     }
   };
 
-  // --- NOVA FUNÇÃO PARA DELETAR FOTO ---
   const handleRemovePhoto = (indexToRemove) => {
     setPhotos(currentPhotos => currentPhotos.filter((_, index) => index !== indexToRemove));
   };
@@ -231,9 +240,7 @@ export default function IncidentRegistrationScreen({ navigation }) {
     try {
       setLoading(true);
 
-      // --- CRIAÇÃO DO HTML DAS FOTOS ---
-      // Percorre todas as fotos e cria tags <img> com o base64
-      const photosHtml = photos.map(photo => 
+      const photosHtml = photos.map(photo =>
         `<div style="margin: 10px; display: inline-block;">
            <img src="data:image/jpeg;base64,${photo.base64}" style="width: 150px; height: 150px; border: 2px solid #ccc; border-radius: 8px;" />
          </div>`
@@ -288,15 +295,19 @@ export default function IncidentRegistrationScreen({ navigation }) {
     try {
       const payload = {
         ...formData,
-        gps: formData.gps ? [formData.gps.latitude, formData.gps.longitude] : [0, 0], 
-        idEquipes: [] 
+        gps: formData.gps ? [formData.gps.latitude, formData.gps.longitude] : [0, 0],
+        idEquipes: []
       };
 
       await registerIncident(payload);
-      
-      Alert.alert('Sucesso', 'Ocorrência registrada!', [
-        { text: 'OK', onPress: () => navigation.navigate('MyIncidents') }
-      ]);
+
+      const mockProtocol = `2025-${Math.floor(Math.random() * 100000)}`;
+
+      navigation.replace('IncidentSuccess', {
+        protocol: mockProtocol,
+        date: new Date().toLocaleString('pt-BR')
+      });
+
     } catch (error) {
       Alert.alert('Erro no Envio', 'Não foi possível enviar. Deseja salvar offline?', [
         { text: 'Cancelar', style: 'cancel' },
@@ -309,35 +320,35 @@ export default function IncidentRegistrationScreen({ navigation }) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
       >
-        <ScrollView 
-          style={{ flex: 1 }} 
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: 150 }]} 
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 150 }]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={true}
-          persistentScrollbar={true}          
+          persistentScrollbar={true}
           indicatorStyle={isDarkMode ? 'white' : 'black'}
         >
-          
+
           <Text style={[styles.sectionTitle, dynamicText(18, 'bold', theme.primary)]}>
             Dados da Ocorrência
           </Text>
 
-          <FormInput 
-            label="Responsável pelo Registro" 
+          <FormInput
+            label="Responsável pelo Registro"
             value={user?.name || 'Não identificado'}
-            editable={false} 
+            editable={false}
             theme={theme} highContrast={highContrast} dynamicText={dynamicText}
           />
-          
-          <FormInput 
-            label="Matrícula" 
+
+          <FormInput
+            label="Matrícula"
             value={user?.matricula || '---'}
-            editable={false} 
+            editable={false}
             theme={theme} highContrast={highContrast} dynamicText={dynamicText}
           />
 
@@ -347,7 +358,7 @@ export default function IncidentRegistrationScreen({ navigation }) {
             <View style={styles.rowInput}>
               <TextInput
                 style={[
-                  styles.input, 
+                  styles.input,
                   { flex: 1, backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border, borderWidth: 1 }
                 ]}
                 placeholder="Aguardando captura..."
@@ -355,8 +366,8 @@ export default function IncidentRegistrationScreen({ navigation }) {
                 value={formData.gps ? `${formData.gps.latitude}, ${formData.gps.longitude}` : ''}
                 editable={false}
               />
-              <TouchableOpacity 
-                style={[styles.iconButton, { backgroundColor: theme.primary }]} 
+              <TouchableOpacity
+                style={[styles.iconButton, { backgroundColor: theme.primary }]}
                 onPress={handleGetLocation}
                 disabled={gpsLoading}
               >
@@ -365,43 +376,43 @@ export default function IncidentRegistrationScreen({ navigation }) {
             </View>
           </View>
 
-          <FormInput 
-            label="Endereço (Preenchido pelo GPS)" 
+          <FormInput
+            label="Endereço (Preenchido pelo GPS)"
             placeholder="Rua, Número, Bairro..."
             value={formData.endereco}
-            onChangeText={(text) => setFormData({...formData, endereco: text})}
+            onChangeText={(text) => setFormData({ ...formData, endereco: text })}
             theme={theme} highContrast={highContrast} dynamicText={dynamicText}
           />
 
-          <CustomDropdown 
-            label="Tipo *" 
-            placeholder="Selecione o tipo..." 
-            options={tiposOcorrencia} 
-            selectedValue={formData.tipo} 
-            onSelect={(val) => setFormData({...formData, tipo: val})} 
+          <CustomDropdown
+            label="Tipo *"
+            placeholder="Selecione o tipo..."
+            options={tiposOcorrencia}
+            selectedValue={formData.tipo}
+            onSelect={(val) => setFormData({ ...formData, tipo: val })}
             theme={theme} highContrast={highContrast} dynamicText={dynamicText} fontSizeLevel={fontSizeLevel}
           />
-          <CustomDropdown 
-            label="Prioridade *" 
-            placeholder="Selecione a prioridade..." 
-            options={prioridades} 
-            selectedValue={formData.prioridade} 
-            onSelect={(val) => setFormData({...formData, prioridade: val})} 
+          <CustomDropdown
+            label="Prioridade *"
+            placeholder="Selecione a prioridade..."
+            options={prioridades}
+            selectedValue={formData.prioridade}
+            onSelect={(val) => setFormData({ ...formData, prioridade: val })}
             theme={theme} highContrast={highContrast} dynamicText={dynamicText} fontSizeLevel={fontSizeLevel}
           />
 
-          <FormInput 
-            label="Código da Viatura *" 
+          <FormInput
+            label="Código da Viatura *"
             placeholder="Ex: ABT-12"
             value={formData.codigoViatura}
-            onChangeText={(text) => setFormData({...formData, codigoViatura: text})}
+            onChangeText={(text) => setFormData({ ...formData, codigoViatura: text })}
             theme={theme} highContrast={highContrast} dynamicText={dynamicText}
           />
-          <FormInput 
-            label="Descrição Inicial" 
+          <FormInput
+            label="Descrição Inicial"
             placeholder="Descreva a situação..."
             value={formData.descricao}
-            onChangeText={(text) => setFormData({...formData, descricao: text})}
+            onChangeText={(text) => setFormData({ ...formData, descricao: text })}
             multiline
             theme={theme} highContrast={highContrast} dynamicText={dynamicText}
           />
@@ -419,15 +430,15 @@ export default function IncidentRegistrationScreen({ navigation }) {
                 <Text style={{ color: theme.primary, fontWeight: '600' }}>Galeria</Text>
               </TouchableOpacity>
             </View>
-            
+
             {/* Lista Horizontal de Fotos COM BOTÃO DE DELETAR */}
             {photos.length > 0 && (
               <ScrollView horizontal style={{ marginTop: 10 }}>
                 {photos.map((photo, index) => (
                   <View key={index} style={styles.photoContainer}>
                     <Image source={{ uri: photo.uri }} style={styles.thumbnail} />
-                    <TouchableOpacity 
-                      style={styles.deletePhotoButton} 
+                    <TouchableOpacity
+                      style={styles.deletePhotoButton}
                       onPress={() => handleRemovePhoto(index)}
                     >
                       <Ionicons name="close-circle" size={24} color="#FF0000" />
@@ -449,7 +460,7 @@ export default function IncidentRegistrationScreen({ navigation }) {
                 </TouchableOpacity>
               </View>
             ) : (
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.signatureButton, { backgroundColor: theme.inputBackground, borderColor: theme.border }]}
                 onPress={() => setIsSignatureModalVisible(true)}
               >
@@ -461,7 +472,7 @@ export default function IncidentRegistrationScreen({ navigation }) {
 
           {/* Botões de Ação */}
           <View style={styles.actionButtonsContainer}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.submitButton, { backgroundColor: theme.primary, flex: 1 }]}
               onPress={handleRegister}
               disabled={loading}
@@ -469,7 +480,7 @@ export default function IncidentRegistrationScreen({ navigation }) {
               {loading ? <ActivityIndicator color="#FFF" /> : <Text style={dynamicText(16, 'bold', '#FFF')}>Enviar Ocorrência</Text>}
             </TouchableOpacity>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.submitButton, { backgroundColor: theme.textSecondary, flex: 1 }]}
               onPress={handleSaveOffline}
               disabled={loading}
@@ -495,7 +506,7 @@ export default function IncidentRegistrationScreen({ navigation }) {
             <SignatureScreen
               ref={signatureRef}
               onOK={handleSignatureOK}
-              webStyle={`.m-signature-pad--footer {display: none; margin: 0px;}`} 
+              webStyle={`.m-signature-pad--footer {display: none; margin: 0px;}`}
             />
           </View>
           <View style={styles.signatureFooter}>
@@ -514,47 +525,167 @@ export default function IncidentRegistrationScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scrollContent: { padding: 24 },
-  sectionTitle: { marginBottom: 24 },
-  inputGroup: { marginBottom: 20 },
-  label: { marginBottom: 8 },
-  input: { borderRadius: 12, paddingHorizontal: 16, fontSize: 16, height: 50, justifyContent: 'center' },
-  
-  rowInput: { flexDirection: 'row', gap: 10 },
-  iconButton: { width: 50, height: 50, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  
-  rowButtons: { flexDirection: 'row', gap: 15 },
-  mediaButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12, borderRadius: 12, borderWidth: 1 },
-  
-  // Estilos para a miniatura e o botão de deletar
-  photoContainer: { position: 'relative', marginRight: 15 },
-  thumbnail: { width: 80, height: 80, borderRadius: 8 },
-  deletePhotoButton: { 
-    position: 'absolute', 
-    top: -10, 
-    right: -10, 
-    backgroundColor: '#FFF', 
-    borderRadius: 15 
+  container: {
+    flex: 1,
   },
-
-  signatureButton: { height: 100, borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center' },
-  signaturePreviewContainer: { backgroundColor: '#FFF', borderRadius: 12, padding: 10, borderWidth: 1, borderColor: '#DDD' },
-  signaturePreview: { width: '100%', height: 100 },
-  clearSignature: { alignSelf: 'flex-end', marginTop: 5 },
-  
-  signatureHeader: { padding: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#EEE' },
-  signatureTitle: { fontSize: 18, fontWeight: 'bold' },
-  signatureFooter: { flexDirection: 'row', padding: 20, justifyContent: 'space-between', gap: 20 },
-  sigBtnClear: { flex: 1, padding: 15, borderRadius: 10, backgroundColor: '#CCC', alignItems: 'center' },
-  sigBtnConfirm: { flex: 1, padding: 15, borderRadius: 10, backgroundColor: '#314697', alignItems: 'center' },
-
-  actionButtonsContainer: { flexDirection: 'row', gap: 10, marginBottom: 40 },
-  submitButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: 12 },
-
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-  modalContent: { width: '100%', maxHeight: '70%', borderRadius: 16, padding: 20, elevation: 5 },
-  modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 16, textAlign: 'center' },
-  modalItem: { paddingVertical: 16, borderBottomWidth: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  modalCloseButton: { marginTop: 20, padding: 14, borderRadius: 10, alignItems: 'center' },
+  scrollContent: {
+    padding: 24,
+  },
+  sectionTitle: {
+    marginBottom: 24,
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  label: {
+    marginBottom: 8,
+  },
+  input: {
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    height: 50,
+    justifyContent: 'center',
+  },
+  rowInput: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  iconButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  rowButtons: {
+    flexDirection: 'row',
+    gap: 15,
+  },
+  mediaButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  // Estilos para a miniatura e o botão de deletar
+  photoContainer: {
+    position: 'relative',
+    marginRight: 15,
+  },
+  thumbnail: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+  },
+  deletePhotoButton: {
+    position: 'absolute',
+    top: -10,
+    right: -10,
+    backgroundColor: '#FFF',
+    borderRadius: 15,
+  },
+  signatureButton: {
+    height: 100,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  signaturePreviewContainer: {
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#DDD',
+  },
+  signaturePreview: {
+    width: '100%',
+    height: 100,
+  },
+  clearSignature: {
+    alignSelf: 'flex-end',
+    marginTop: 5,
+  },
+  signatureHeader: {
+    padding: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#EEE',
+  },
+  signatureTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  signatureFooter: {
+    flexDirection: 'row',
+    padding: 20,
+    justifyContent: 'space-between',
+    gap: 20,
+  },
+  sigBtnClear: {
+    flex: 1,
+    padding: 15,
+    borderRadius: 10,
+    backgroundColor: '#CCC',
+    alignItems: 'center',
+  },
+  sigBtnConfirm: {
+    flex: 1,
+    padding: 15,
+    borderRadius: 10,
+    backgroundColor: '#314697',
+    alignItems: 'center',
+  },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 40,
+  },
+  submitButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 12,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '100%',
+    maxHeight: '70%',
+    borderRadius: 16,
+    padding: 20,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalItem: {
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  modalCloseButton: {
+    marginTop: 20,
+    padding: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
 });

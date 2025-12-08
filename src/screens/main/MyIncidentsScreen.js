@@ -1,98 +1,53 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  View, Text, StyleSheet, FlatList, ActivityIndicator, 
-  RefreshControl, TouchableOpacity 
+  View, 
+  Text, 
+  StyleSheet, 
+  FlatList, 
+  TouchableOpacity, 
+  SafeAreaView,
+  ActivityIndicator,
+  RefreshControl 
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../contexts/AccessibilityContext';
+import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons'; 
 
-// Importação ajustada para a pasta services
 import { getMyIncidents } from '../../services/OcorrenciasService';
+import { useUser } from '../../contexts/UserContext';
 
-// Componente para renderizar cada item da lista
-const IncidentItem = ({ item, theme, dynamicText, highContrast }) => {
-  const getStatusColor = (status) => {
-    // Tratamento simples para evitar erro se status for null
-    const s = status ? String(status).toLowerCase() : '';
-    switch(s) {
-      case 'em andamento': return '#2196f3'; // Azul
-      case 'pendente': return '#ff9800'; // Laranja
-      case 'finalizada': return '#4caf50'; // Verde
-      default: return theme.textSecondary;
-    }
-  };
-
-  return (
-    <TouchableOpacity 
-      style={[
-        styles.card, 
-        { 
-          backgroundColor: theme.cardBackground,
-          borderColor: highContrast ? theme.border : theme.border,
-          borderWidth: 1
-        }
-      ]}
-    >
-      <View style={styles.cardHeader}>
-        <Text style={dynamicText(14, 'bold', theme.primary)}>
-          {/* Garante que item.id existe antes de tentar cortar */}
-          #{item.id ? String(item.id).substring(0, 8) : 'N/A'}...
-        </Text>
-        <View style={styles.statusBadge}>
-          <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
-          <Text style={dynamicText(12, '600', theme.text)}>
-            {item.status || 'Pendente'}
-          </Text>
-        </View>
-      </View>
-
-      <Text style={[styles.cardTitle, dynamicText(16, 'bold', theme.text)]}>
-        {item.tipo || 'Ocorrência sem tipo'}
-      </Text>
-      
-      <Text numberOfLines={2} style={dynamicText(14, 'normal', theme.textSecondary)}>
-        {item.descricao || 'Sem descrição disponível.'}
-      </Text>
-
-      <View style={styles.cardFooter}>
-        <View style={styles.footerItem}>
-          <Ionicons name="calendar-outline" size={14} color={theme.textSecondary} />
-          <Text style={dynamicText(12, 'normal', theme.textSecondary)}>
-            {/* Formata a data ou usa a data atual se não existir */}
-            {new Date(item.data_criacao || Date.now()).toLocaleDateString('pt-BR')}
-          </Text>
-        </View>
-        <Ionicons name="chevron-forward" size={16} color={theme.textSecondary} />
-      </View>
-    </TouchableOpacity>
-  );
+// ... (Funções formatDate e getStatusColor continuam iguais) ...
+const formatDate = (unixTimestamp) => {
+  if (!unixTimestamp) return 'Data desconhecida';
+  const date = new Date(unixTimestamp * 1000); 
+  return date.toLocaleDateString('pt-BR', {
+    day: '2-digit', month: '2-digit', year: 'numeric', 
+    hour: '2-digit', minute: '2-digit'
+  });
 };
 
-export default function MyIncidentsScreen() {
-  const { theme, fontSizeLevel, highContrast } = useTheme();
+const getStatusColor = (status) => {
+  if (!status) return '#6B7280';
+  const statusLower = status.toLowerCase();
+  if (statusLower.includes('aberta') || statusLower.includes('pendente')) return '#EF4444';
+  if (statusLower.includes('andamento')) return '#F59E0B';
+  if (statusLower.includes('finalizada') || statusLower.includes('concluída')) return '#10B981';
+  return '#6B7280';
+};
+
+export default function MyIncidentsScreen({ navigation }) {
+  // ... (Toda a lógica de state e useEffect continua igual) ...
+  const { user } = useUser();
+  const [filter, setFilter] = useState('Todas');
   const [incidents, setIncidents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState(null);
 
-  const dynamicText = (size, weight = 'normal', color = theme.text) => ({
-    fontSize: size * fontSizeLevel,
-    fontWeight: weight,
-    color: color
-  });
-
-  const loadData = async () => {
+  const fetchIncidents = async () => {
     try {
-      setError(null);
-      // Chama o serviço
       const data = await getMyIncidents();
-      
-      // Garante que incidents seja sempre um array, mesmo se a API retornar algo estranho
-      setIncidents(Array.isArray(data) ? data : []);
-      
-    } catch (err) {
-      console.error(err);
-      setError('Não foi possível carregar as ocorrências.');
+      setIncidents(data || []);
+    } catch (error) {
+      console.error("Erro ao buscar ocorrências:", error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -100,138 +55,239 @@ export default function MyIncidentsScreen() {
   };
 
   useEffect(() => {
-    loadData();
+    fetchIncidents();
   }, []);
 
   const onRefresh = () => {
     setRefreshing(true);
-    loadData();
+    fetchIncidents();
   };
 
-  if (loading && !refreshing) {
+  const filteredData = filter === 'Todas' 
+    ? incidents 
+    : incidents.filter(item => {
+        const s = item.status?.toLowerCase() || '';
+        const f = filter.toLowerCase();
+        if (f === 'aberta' && (s.includes('aberta') || s.includes('pendente'))) return true;
+        if (f === 'em andamento' && s.includes('andamento')) return true;
+        if (f === 'finalizada' && s.includes('finalizada')) return true;
+        return false;
+      });
+
+  const renderItem = ({ item }) => {
+    const statusColor = getStatusColor(item.status);
+    const titulo = item.chamado?.tipo || 'Ocorrência';
+    const codigo = `#${item.id?.substring(0, 8).toUpperCase()}`;
+    const dataFormatada = formatDate(item.timestamps?.abertura);
+    const descricao = item.chamado?.detalhes || 'Sem descrição';
+    const endereco = "Localização Registrada"; 
+
     return (
-      <View style={[styles.centerContainer, { backgroundColor: theme.background }]}>
-        <ActivityIndicator size="large" color={theme.primary} />
-        <Text style={[styles.loadingText, dynamicText(14, 'normal', theme.textSecondary)]}>
-          Buscando ocorrências...
-        </Text>
+      <View style={[styles.card, { borderLeftColor: statusColor }]}>
+        <View style={styles.cardHeader}>
+          <View style={styles.typeContainer}>
+            <View style={[styles.iconCircle, { backgroundColor: statusColor + '20' }]}>
+              <Ionicons name="alert-circle" size={24} color={statusColor} />
+            </View>
+            <View>
+              <Text style={styles.cardTitle}>{titulo}</Text>
+              <Text style={styles.cardCode}>{codigo}</Text>
+            </View>
+          </View>
+          <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
+            <Text style={styles.statusText}>{item.status || 'Desconhecido'}</Text>
+          </View>
+        </View>
+
+        <View style={styles.cardBody}>
+          <View style={styles.row}>
+            <Ionicons name="location-outline" size={16} color="#6B7280" />
+            <Text style={styles.rowText}>{endereco}</Text>
+          </View>
+          <View style={styles.row}>
+            <Ionicons name="time-outline" size={16} color="#6B7280" />
+            <Text style={styles.rowText}>{dataFormatada}</Text>
+          </View>
+          <Text style={styles.description} numberOfLines={2}>
+            {descricao}
+          </Text>
+        </View>
       </View>
     );
-  }
+  };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
-      {error ? (
-        <View style={styles.centerContainer}>
-          <Ionicons name="alert-circle-outline" size={48} color={theme.textSecondary} />
-          <Text style={[styles.errorText, dynamicText(16, 'normal', theme.textSecondary)]}>
-            {error}
-          </Text>
-          <TouchableOpacity onPress={() => { setLoading(true); loadData(); }} style={[styles.retryButton, { backgroundColor: theme.primary }]}>
-            <Text style={dynamicText(14, 'bold', '#FFF')}>Tentar Novamente</Text>
+    <SafeAreaView style={styles.container}>
+      <StatusBar style="dark" />
+      
+      {/* REMOVI O CABEÇALHO PERSONALIZADO DAQUI */}
+
+      {/* Filtros (Abas) */}
+      <View style={styles.filterContainer}>
+        {['Todas', 'Aberta', 'Em Andamento', 'Finalizada'].map((tab) => (
+          <TouchableOpacity 
+            key={tab} 
+            style={[
+              styles.filterTab, 
+              filter === tab && styles.filterTabActive
+            ]}
+            onPress={() => setFilter(tab)}
+          >
+            <Text style={[
+              styles.filterText, 
+              filter === tab && styles.filterTextActive
+            ]}>
+              {tab === 'Em Andamento' ? 'Andamento' : tab}
+            </Text>
           </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Lista */}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#1E3A8A" />
+          <Text style={styles.loadingText}>Carregando ocorrências...</Text>
         </View>
       ) : (
         <FlatList
-          data={incidents}
-          keyExtractor={(item) => String(item.id || Math.random())}
-          renderItem={({ item }) => (
-            <IncidentItem 
-              item={item} 
-              theme={theme} 
-              dynamicText={dynamicText} 
-              highContrast={highContrast} 
-            />
-          )}
-          contentContainerStyle={styles.listContent}
+          data={filteredData}
+          renderItem={renderItem}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
           ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons name="documents-outline" size={48} color={theme.textSecondary} style={{ opacity: 0.5 }} />
-              <Text style={[dynamicText(16, 'normal', theme.textSecondary), { marginTop: 10 }]}>
-                Nenhuma ocorrência encontrada.
-              </Text>
-            </View>
+            <Text style={styles.emptyText}>Nenhuma ocorrência encontrada.</Text>
           }
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  centerContainer: {
+  container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    backgroundColor: '#F9FAFB',
   },
-  listContent: {
-    padding: 16,
-    gap: 16,
+  // REMOVI OS ESTILOS DO HEADER (header e headerTitle)
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 15,
+    backgroundColor: '#FFF',
+    marginBottom: 10,
+    paddingHorizontal: 10,
   },
-  loadingText: { marginTop: 10 },
-  errorText: { marginTop: 10, marginBottom: 20, textAlign: 'center' },
-  retryButton: {
-    paddingVertical: 10,
+  filterTab: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  filterTabActive: {
+    backgroundColor: '#E0E7FF',
+    borderColor: '#1E3A8A',
+  },
+  filterText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  filterTextActive: {
+    color: '#1E3A8A',
+  },
+  listContainer: {
     paddingHorizontal: 20,
-    borderRadius: 8,
+    paddingBottom: 20,
   },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 100,
-  },
-  
-  // Card Styles
   card: {
-    padding: 16,
+    backgroundColor: '#FFF',
     borderRadius: 12,
-    marginBottom: 12,
-    elevation: 2,
+    marginBottom: 16,
+    padding: 16,
+    borderLeftWidth: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 4,
+    elevation: 3,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
+    alignItems: 'flex-start',
+    marginBottom: 12,
   },
-  statusBadge: {
+  typeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    gap: 10,
   },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   cardTitle: {
-    marginBottom: 4,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1F2937',
   },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.05)',
+  cardCode: {
+    fontSize: 12,
+    color: '#6B7280',
   },
-  footerItem: {
+  statusBadge: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+  },
+  statusText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+  },
+  cardBody: {
+    gap: 6,
+  },
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
+  rowText: {
+    fontSize: 14,
+    color: '#4B5563',
+  },
+  description: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginTop: 4,
+    fontStyle: 'italic',
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 40,
+    color: '#9CA3AF',
+    fontSize: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    color: '#1E3A8A',
+    fontSize: 16,
+  }
 });
