@@ -70,7 +70,7 @@ export default function LoginScreen({ navigation }) {
           {/* Cabeçalho */}
           <View style={styles.header}>
             <View style={styles.logoContainer}>
-               <Logo width={120} height={120} /> 
+               <Logo width={230} height={230} /> 
             </View>
             
             <Text style={styles.welcomeText}>Bem-vindo!</Text>
