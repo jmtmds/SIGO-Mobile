@@ -12,7 +12,6 @@ export const loginUser = async (matricula, senha) => {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Access-Control-Allow-Origin': `${API_URL}`,
       },
       credentials: 'include', // <--- IMPORTANTE: Aceita o cookie do backend
       body: params.toString(),
