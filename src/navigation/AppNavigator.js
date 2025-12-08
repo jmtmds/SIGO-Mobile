@@ -11,6 +11,7 @@ import SettingsMenuScreen from '../screens/Main/Settings/SettingsMenuScreen';
 import AccessibilityScreen from '../screens/Main/Settings/AccessibilityScreen';
 import MyIncidentsScreen from '../screens/Main/MyIncidentsScreen';
 import IncidentRegistrationScreen from '../screens/Main/IncidentRegistrationScreen';
+import IncidentSuccessScreen from '../screens/Main/IncidentSuccessScreen';
 
 const Stack = createStackNavigator();
 
@@ -100,6 +101,13 @@ export default function AppNavigator() {
         component={AccessibilityScreen}
         options={{ title: 'Acessibilidade' }}
       />
+      {/* Tela de Sucesso na Ocorrência */}
+      <Stack.Screen 
+       name="IncidentSuccess" 
+      component={IncidentSuccessScreen} 
+     options={{ headerShown: false }} // Sem cabeçalho, igual ao Figma
+      />
+
 
       {/* Rotas Placeholder (Futuras implementações) */}
       <Stack.Screen name="EditProfile" component={DashboardScreen} options={{ title: 'Editar Perfil' }} />
