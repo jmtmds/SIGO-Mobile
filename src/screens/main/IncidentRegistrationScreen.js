@@ -44,12 +44,12 @@ const FormInput = ({ label, value, onChangeText, placeholder, multiline = false,
   </View>
 );
 
-const CustomDropdown = ({ label, options, selectedValue, onSelect, placeholder, theme, highContrast, dynamicText, fontSizeLevel }) => {
+const CustomDropdown = ({ label, options, selectedValue, onSelect, placeholder, theme, highContrast, dynamicText, fontSizeLevel, disabled = false }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const selectedLabel = options.find(o => o.value === selectedValue)?.label;
 
   return (
-    <View style={styles.inputGroup}>
+    <View style={[styles.inputGroup, disabled && { opacity: 0.5 }]}>
       <Text style={[styles.label, dynamicText(14, '600', theme.text)]}>{label}</Text>
       <TouchableOpacity
         style={[
@@ -63,7 +63,8 @@ const CustomDropdown = ({ label, options, selectedValue, onSelect, placeholder, 
             alignItems: 'center'
           }
         ]}
-        onPress={() => setModalVisible(true)}
+        onPress={() => !disabled && setModalVisible(true)}
+        disabled={disabled}
       >
         <Text style={{ color: selectedLabel ? theme.text : theme.textSecondary, fontSize: 16 * fontSizeLevel }}>
           {selectedLabel || placeholder}
@@ -117,9 +118,9 @@ export default function IncidentRegistrationScreen({ navigation }) {
 
   const [formData, setFormData] = useState({
     endereco: '',
-    pontoReferencia: '',
+    pontoReferencia: '', // Já estava no state, agora vai aparecer na tela!
     tipo: '',
-    subtipo: '',    
+    subtipo: '',
     prioridade: '',
     descricao: '',
     codigoViatura: '',
@@ -132,6 +133,7 @@ export default function IncidentRegistrationScreen({ navigation }) {
     color: color
   });
 
+  // Opções de Categoria Principal
   const tiposOcorrencia = [
     { label: 'Incêndio', value: 'fire' },
     { label: 'Acidente de Trânsito', value: 'traffic_accident' },
@@ -140,11 +142,48 @@ export default function IncidentRegistrationScreen({ navigation }) {
     { label: 'Outros', value: 'other' },
   ];
 
+  // Opções de Prioridade
   const prioridades = [
     { label: 'Baixa', value: 'low' },
     { label: 'Média', value: 'medium' },
     { label: 'Alta', value: 'high' },
   ];
+
+  // Lógica para filtrar Subtipos
+  const getSubtipos = (tipo) => {
+    switch (tipo) {
+      case 'fire':
+        return [
+          { label: 'Vegetação', value: 'vegetation' },
+          { label: 'Comercial', value: 'comercial' },
+          { label: 'Residencial', value: 'residential' },
+          { label: 'Veículo', value: 'vehicle' },
+        ];
+      case 'traffic_accident':
+        return [
+          { label: 'Colisão', value: 'collision' },
+          { label: 'Capotamento', value: 'rollover' },
+          { label: 'Acidente de Moto', value: 'motorcycle_crash' },
+        ];
+      case 'medic_emergency':
+        return [
+          { label: 'Parada Cardiorrespiratória', value: 'heart_stop' },
+          { label: 'Convulsão', value: 'seizure' },
+          { label: 'Intoxicação', value: 'intoxication' },
+          { label: 'Lesão Grave', value: 'serious_injury' },
+          { label: 'Atendimento Pré-Hospitalar', value: 'pre_hospital_care' },
+        ];
+      case 'rescue': 
+      case 'other':
+        return [
+          { label: 'Animal Ferido', value: 'injured_animal' },
+          { label: 'Inundação', value: 'flood' },
+          { label: 'Queda de Árvore', value: 'tree_crash' },
+        ];
+      default:
+        return [];
+    }
+  };
 
   const handleGetLocation = async () => {
     setGpsLoading(true);
@@ -191,11 +230,10 @@ export default function IncidentRegistrationScreen({ navigation }) {
   const handlePickImage = async (useCamera = false) => {
     try {
       let result;
-      // Opções da câmera/galeria
       const options = {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         quality: 0.5,
-        base64: true, // IMPORTANTE: Isso garante que a imagem venha convertida para salvar no PDF
+        base64: true, 
       };
 
       if (useCamera) {
@@ -217,7 +255,6 @@ export default function IncidentRegistrationScreen({ navigation }) {
     }
   };
 
-  // --- NOVA FUNÇÃO PARA DELETAR FOTO ---
   const handleRemovePhoto = (indexToRemove) => {
     setPhotos(currentPhotos => currentPhotos.filter((_, index) => index !== indexToRemove));
   };
@@ -231,8 +268,6 @@ export default function IncidentRegistrationScreen({ navigation }) {
     try {
       setLoading(true);
 
-      // --- CRIAÇÃO DO HTML DAS FOTOS ---
-      // Percorre todas as fotos e cria tags <img> com o base64
       const photosHtml = photos.map(photo => 
         `<div style="margin: 10px; display: inline-block;">
            <img src="data:image/jpeg;base64,${photo.base64}" style="width: 150px; height: 150px; border: 2px solid #ccc; border-radius: 8px;" />
@@ -245,9 +280,11 @@ export default function IncidentRegistrationScreen({ navigation }) {
             <h1 style="color: #314697;">Relatório de Ocorrência</h1>
             <p><strong>Responsável:</strong> ${user?.name} (Mat: ${user?.matricula})</p>
             <p><strong>Tipo:</strong> ${formData.tipo}</p>
+            <p><strong>Subtipo:</strong> ${formData.subtipo}</p>
             <p><strong>Prioridade:</strong> ${formData.prioridade}</p>
             <p><strong>Viatura:</strong> ${formData.codigoViatura}</p>
             <p><strong>Endereço:</strong> ${formData.endereco}</p>
+            <p><strong>Ponto de Referência:</strong> ${formData.pontoReferencia || '---'}</p>
             <p><strong>Coordenadas:</strong> ${formData.gps ? `${formData.gps.latitude}, ${formData.gps.longitude}` : 'N/A'}</p>
             
             <h3>Descrição</h3>
@@ -278,8 +315,15 @@ export default function IncidentRegistrationScreen({ navigation }) {
   };
 
   const handleRegister = async () => {
+    // Validação básica
     if (!formData.endereco || !formData.tipo || !formData.prioridade || !formData.codigoViatura) {
       Alert.alert('Campos Obrigatórios', 'Preencha Endereço, Tipo, Prioridade e Viatura.');
+      return;
+    }
+
+    const opcoesSubtipo = getSubtipos(formData.tipo);
+    if (opcoesSubtipo.length > 0 && !formData.subtipo) {
+      Alert.alert('Atenção', 'Selecione uma Subcategoria.');
       return;
     }
 
@@ -294,9 +338,13 @@ export default function IncidentRegistrationScreen({ navigation }) {
 
       await registerIncident(payload);
       
-      Alert.alert('Sucesso', 'Ocorrência registrada!', [
-        { text: 'OK', onPress: () => navigation.navigate('MyIncidents') }
-      ]);
+      const mockProtocol = `2025-${Math.floor(Math.random() * 100000)}`;
+      
+      navigation.replace('IncidentSuccess', {
+        protocol: mockProtocol,
+        date: new Date().toLocaleString('pt-BR')
+      });
+
     } catch (error) {
       Alert.alert('Erro no Envio', 'Não foi possível enviar. Deseja salvar offline?', [
         { text: 'Cancelar', style: 'cancel' },
@@ -373,14 +421,34 @@ export default function IncidentRegistrationScreen({ navigation }) {
             theme={theme} highContrast={highContrast} dynamicText={dynamicText}
           />
 
+          {/* NOVO CAMPO: PONTO DE REFERÊNCIA */}
+          <FormInput 
+            label="Ponto de Referência" 
+            placeholder="Ex: Próximo ao mercado, ao lado da escola..."
+            value={formData.pontoReferencia}
+            onChangeText={(text) => setFormData({...formData, pontoReferencia: text})}
+            theme={theme} highContrast={highContrast} dynamicText={dynamicText}
+          />
+
           <CustomDropdown 
             label="Tipo *" 
             placeholder="Selecione o tipo..." 
             options={tiposOcorrencia} 
             selectedValue={formData.tipo} 
-            onSelect={(val) => setFormData({...formData, tipo: val})} 
+            onSelect={(val) => setFormData({...formData, tipo: val, subtipo: ''})} 
             theme={theme} highContrast={highContrast} dynamicText={dynamicText} fontSizeLevel={fontSizeLevel}
           />
+
+          <CustomDropdown 
+            label="Subcategoria *" 
+            placeholder={formData.tipo ? "Selecione a subcategoria..." : "Selecione o tipo primeiro"}
+            options={getSubtipos(formData.tipo)} 
+            selectedValue={formData.subtipo} 
+            onSelect={(val) => setFormData({...formData, subtipo: val})} 
+            theme={theme} highContrast={highContrast} dynamicText={dynamicText} fontSizeLevel={fontSizeLevel}
+            disabled={!formData.tipo || getSubtipos(formData.tipo).length === 0}
+          />
+
           <CustomDropdown 
             label="Prioridade *" 
             placeholder="Selecione a prioridade..." 
@@ -514,47 +582,167 @@ export default function IncidentRegistrationScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scrollContent: { padding: 24 },
-  sectionTitle: { marginBottom: 24 },
-  inputGroup: { marginBottom: 20 },
-  label: { marginBottom: 8 },
-  input: { borderRadius: 12, paddingHorizontal: 16, fontSize: 16, height: 50, justifyContent: 'center' },
-  
-  rowInput: { flexDirection: 'row', gap: 10 },
-  iconButton: { width: 50, height: 50, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  
-  rowButtons: { flexDirection: 'row', gap: 15 },
-  mediaButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12, borderRadius: 12, borderWidth: 1 },
-  
-  // Estilos para a miniatura e o botão de deletar
-  photoContainer: { position: 'relative', marginRight: 15 },
-  thumbnail: { width: 80, height: 80, borderRadius: 8 },
-  deletePhotoButton: { 
-    position: 'absolute', 
-    top: -10, 
-    right: -10, 
-    backgroundColor: '#FFF', 
-    borderRadius: 15 
+  container: {
+    flex: 1,
   },
-
-  signatureButton: { height: 100, borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center' },
-  signaturePreviewContainer: { backgroundColor: '#FFF', borderRadius: 12, padding: 10, borderWidth: 1, borderColor: '#DDD' },
-  signaturePreview: { width: '100%', height: 100 },
-  clearSignature: { alignSelf: 'flex-end', marginTop: 5 },
-  
-  signatureHeader: { padding: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#EEE' },
-  signatureTitle: { fontSize: 18, fontWeight: 'bold' },
-  signatureFooter: { flexDirection: 'row', padding: 20, justifyContent: 'space-between', gap: 20 },
-  sigBtnClear: { flex: 1, padding: 15, borderRadius: 10, backgroundColor: '#CCC', alignItems: 'center' },
-  sigBtnConfirm: { flex: 1, padding: 15, borderRadius: 10, backgroundColor: '#314697', alignItems: 'center' },
-
-  actionButtonsContainer: { flexDirection: 'row', gap: 10, marginBottom: 40 },
-  submitButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: 12 },
-
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-  modalContent: { width: '100%', maxHeight: '70%', borderRadius: 16, padding: 20, elevation: 5 },
-  modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 16, textAlign: 'center' },
-  modalItem: { paddingVertical: 16, borderBottomWidth: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  modalCloseButton: { marginTop: 20, padding: 14, borderRadius: 10, alignItems: 'center' },
+  scrollContent: {
+    padding: 24,
+  },
+  sectionTitle: {
+    marginBottom: 24,
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  label: {
+    marginBottom: 8,
+  },
+  input: {
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    height: 50,
+    justifyContent: 'center',
+  },
+  rowInput: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  iconButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  rowButtons: {
+    flexDirection: 'row',
+    gap: 15,
+  },
+  mediaButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  // Estilos para a miniatura e o botão de deletar
+  photoContainer: {
+    position: 'relative',
+    marginRight: 15,
+  },
+  thumbnail: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+  },
+  deletePhotoButton: {
+    position: 'absolute',
+    top: -10,
+    right: -10,
+    backgroundColor: '#FFF',
+    borderRadius: 15,
+  },
+  signatureButton: {
+    height: 100,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  signaturePreviewContainer: {
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#DDD',
+  },
+  signaturePreview: {
+    width: '100%',
+    height: 100,
+  },
+  clearSignature: {
+    alignSelf: 'flex-end',
+    marginTop: 5,
+  },
+  signatureHeader: {
+    padding: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#EEE',
+  },
+  signatureTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  signatureFooter: {
+    flexDirection: 'row',
+    padding: 20,
+    justifyContent: 'space-between',
+    gap: 20,
+  },
+  sigBtnClear: {
+    flex: 1,
+    padding: 15,
+    borderRadius: 10,
+    backgroundColor: '#CCC',
+    alignItems: 'center',
+  },
+  sigBtnConfirm: {
+    flex: 1,
+    padding: 15,
+    borderRadius: 10,
+    backgroundColor: '#314697',
+    alignItems: 'center',
+  },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 40,
+  },
+  submitButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 12,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '100%',
+    maxHeight: '70%',
+    borderRadius: 16,
+    padding: 20,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalItem: {
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  modalCloseButton: {
+    marginTop: 20,
+    padding: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
 });

@@ -15,14 +15,15 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons'; 
 
+
 // Importa o serviço de API
 import { loginUser } from '../../services/authService';
 
-// Importa o Contexto de Usuário (A MUDANÇA IMPORTANTE ESTÁ AQUI)
+// Importa o Contexto de Usuário
 import { useUser } from '../../contexts/UserContext';
 
 // Importe o seu Logo
-import Logo from '../../assets/logo.svg'; 
+import Logo from '../../assets/logo.svg';
 
 export default function LoginScreen({ navigation }) {
   const [matricula, setMatricula] = useState('');
@@ -46,7 +47,6 @@ export default function LoginScreen({ navigation }) {
       await loginUser(matricula, senha);
       
       // 3. Se a API não deu erro, atualizamos o estado global
-      // Isso fará a tela mudar automaticamente para o Dashboard
       signIn({ matricula: matricula }); 
       
     } catch (error) {
@@ -65,22 +65,18 @@ export default function LoginScreen({ navigation }) {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
           
-          {/* Botão Voltar */}
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color="#333" />
-          </TouchableOpacity>
-
           {/* Cabeçalho */}
           <View style={styles.header}>
             <View style={styles.logoContainer}>
-               <Logo width={300} height={300} /> 
+               <Logo width={230} height={230} /> 
             </View>
+            
             <Text style={styles.welcomeText}>Bem-vindo!</Text>
-            <Text style={styles.instructionText}>
-              Digite sua Matrícula para acessar o sistema
-            </Text>
+           <Text style={styles.instructionText}>
+  Digite sua Matrícula para <Text style={{ fontWeight: 'bold' }}>acessar</Text> o sistema
+</Text>
           </View>
 
           {/* Formulário */}
@@ -108,6 +104,13 @@ export default function LoginScreen({ navigation }) {
                 onChangeText={setSenha}
                 secureTextEntry
               />
+              {/* Link de Esqueci a Senha */}
+              <TouchableOpacity 
+                style={styles.forgotPasswordContainer} 
+                onPress={() => Alert.alert('Recuperação', 'Funcionalidade em desenvolvimento.')}
+              >
+                <Text style={styles.forgotPasswordText}>Esqueceu sua senha?</Text>
+              </TouchableOpacity>
             </View>
 
             <TouchableOpacity 
@@ -121,6 +124,7 @@ export default function LoginScreen({ navigation }) {
                 <Text style={styles.loginButtonText}>Entrar</Text>
               )}
             </TouchableOpacity>
+
           </View>
 
         </ScrollView>
@@ -139,19 +143,12 @@ const styles = StyleSheet.create({
     padding: 24,
     justifyContent: 'center',
   },
-  backButton: {
-    marginBottom: 24,
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-  },
   header: {
     alignItems: 'center', 
-    marginBottom: 40,
+    marginBottom: 32,
   },
   logoContainer: {
-    marginBottom: 6,
+    marginBottom: 24,
   },
   welcomeText: {
     fontSize: 28,
@@ -162,7 +159,7 @@ const styles = StyleSheet.create({
   },
   instructionText: {
     fontSize: 16,
-    color: '#6B7280', 
+    color: '#000000ff', 
     textAlign: 'center',
     paddingHorizontal: 20,
   },
@@ -170,13 +167,13 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   inputGroup: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#374151', 
-    marginBottom: 8,
+    marginBottom: 6,
     marginLeft: 4,
   },
   input: {
@@ -188,12 +185,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1F2937',
   },
+  forgotPasswordContainer: {
+    alignSelf: 'flex-end',
+    marginTop: 8,
+  },
+  forgotPasswordText: {
+    color: '#000000ff',
+    fontSize: 14,
+    fontWeight: '500',
+    textDecorationLine: 'underline',
+  },
   loginButton: {
     backgroundColor: '#314697',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
-    marginTop: 12,
+    marginTop: 24,
     shadowColor: '#314697',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
