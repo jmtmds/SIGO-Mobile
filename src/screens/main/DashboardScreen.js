@@ -142,7 +142,7 @@ export default function DashboardScreen({ navigation }) {
         <View style={styles.statsRow}>
           <View style={[
             styles.statCard, 
-            { backgroundColor: cardBg, borderColor: isDarkMode ? '#FFFFFF' : primaryColor }
+            { backgroundColor: cardBg }
           ]}>
             <View style={[styles.iconCircle, { backgroundColor: 'rgba(49, 70, 151, 0.1)' }]}>
               <Ionicons name="alert-circle" size={28} color={primaryColor} />
@@ -155,7 +155,7 @@ export default function DashboardScreen({ navigation }) {
 
           <View style={[
             styles.statCard, 
-            { backgroundColor: cardBg, borderColor: isDarkMode ? '#FFFFFF' : primaryColor }
+            { backgroundColor: cardBg }
           ]}>
             <View style={[styles.iconCircle, { backgroundColor: 'rgba(46, 204, 113, 0.1)' }]}>
               <Ionicons name="people" size={28} color="#2ECC71" />
@@ -248,6 +248,10 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 20,
     paddingHorizontal: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
     elevation: 8,
     zIndex: 10,
   },
@@ -261,8 +265,13 @@ const styles = StyleSheet.create({
   profileImage: {
     width: 100,
     height: 100,
-    borderRadius: 20, 
+    borderRadius: 24, 
     borderWidth: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+    elevation: 3,
   },
   profileOnlineIndicator: {
     position: 'absolute',
@@ -292,10 +301,15 @@ const styles = StyleSheet.create({
   },
   roleBadge: {
     marginTop: 8,
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-    borderRadius: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 12,
     alignSelf: 'flex-start',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   headerRole: {
     fontSize: 13,
@@ -311,29 +325,33 @@ const styles = StyleSheet.create({
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 15,
-    marginTop: 20,
-    marginBottom: 30,
+    gap: 18,
+    marginTop: 25,
+    marginBottom: 35,
   },
   statCard: {
     flex: 1,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 20,
     alignItems: 'center',
-    borderWidth: 2,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 6,
   },
   iconCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   statNumber: {
     fontSize: 28,
@@ -352,29 +370,34 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
   actionsContainer: {
-    gap: 15,
+    gap: 18,
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 15,
-    borderRadius: 12,
-    height: 80,
+    padding: 18,
+    borderRadius: 16,
+    height: 85,
   },
   shadowProp: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
   },
   actionIconBox: {
-    width: 50,
-    height: 50,
-    borderRadius: 12,
+    width: 52,
+    height: 52,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   actionTexts: {
     flex: 1,
