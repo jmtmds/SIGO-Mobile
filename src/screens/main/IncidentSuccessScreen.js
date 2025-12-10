@@ -21,7 +21,7 @@ export default function IncidentSuccessScreen({ route, navigation }) {
         
         {/* Ícone de Sucesso */}
         <View style={styles.iconContainer}>
-          <Ionicons name="checkmark" size={60} color="#10B981" />
+          <Ionicons name="checkmark-circle" size={80} color="#10B981" />
         </View>
 
         <Text style={styles.title}>Ocorrência Registrada!</Text>
@@ -75,11 +75,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   iconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#D1FAE5', 
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 24,
   },
   title: {
@@ -126,7 +123,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   newButton: {
-    backgroundColor: '#F97316', // Laranja do Figma
+    backgroundColor: '#cdc4beff',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',

@@ -13,9 +13,8 @@ import SignatureScreen from 'react-native-signature-canvas';
 
 import { useTheme } from '../../contexts/AccessibilityContext';
 import { useUser } from '../../contexts/UserContext';
+import { useStats } from '../../contexts/StatsContext';
 import { registerIncident } from '../../services/OcorrenciasService';
-
-// --- COMPONENTES AUXILIARES ---
 
 const FormInput = ({ label, value, onChangeText, placeholder, multiline = false, theme, highContrast, dynamicText, editable = true }) => (
   <View style={styles.inputGroup}>
@@ -102,11 +101,10 @@ const CustomDropdown = ({ label, options, selectedValue, onSelect, placeholder, 
   );
 };
 
-// --- TELA PRINCIPAL ---
-
 export default function IncidentRegistrationScreen({ navigation }) {
   const { theme, fontSizeLevel, highContrast, isDarkMode } = useTheme();
   const { user } = useUser();
+  const { incrementActiveIncidents } = useStats();
   
   const [loading, setLoading] = useState(false);
   const [gpsLoading, setGpsLoading] = useState(false);
@@ -118,7 +116,7 @@ export default function IncidentRegistrationScreen({ navigation }) {
 
   const [formData, setFormData] = useState({
     endereco: '',
-    pontoReferencia: '', // Já estava no state, agora vai aparecer na tela!
+    pontoReferencia: '', 
     tipo: '',
     subtipo: '',
     prioridade: '',
@@ -133,7 +131,6 @@ export default function IncidentRegistrationScreen({ navigation }) {
     color: color
   });
 
-  // Opções de Categoria Principal
   const tiposOcorrencia = [
     { label: 'Incêndio', value: 'fire' },
     { label: 'Acidente de Trânsito', value: 'traffic_accident' },
@@ -142,14 +139,12 @@ export default function IncidentRegistrationScreen({ navigation }) {
     { label: 'Outros', value: 'other' },
   ];
 
-  // Opções de Prioridade
   const prioridades = [
     { label: 'Baixa', value: 'low' },
     { label: 'Média', value: 'medium' },
     { label: 'Alta', value: 'high' },
   ];
 
-  // Lógica para filtrar Subtipos
   const getSubtipos = (tipo) => {
     switch (tipo) {
       case 'fire':
@@ -315,7 +310,6 @@ export default function IncidentRegistrationScreen({ navigation }) {
   };
 
   const handleRegister = async () => {
-    // Validação básica
     if (!formData.endereco || !formData.tipo || !formData.prioridade || !formData.codigoViatura) {
       Alert.alert('Campos Obrigatórios', 'Preencha Endereço, Tipo, Prioridade e Viatura.');
       return;
@@ -337,6 +331,8 @@ export default function IncidentRegistrationScreen({ navigation }) {
       };
 
       await registerIncident(payload);
+      
+      incrementActiveIncidents();
       
       const mockProtocol = `2025-${Math.floor(Math.random() * 100000)}`;
       
@@ -389,7 +385,6 @@ export default function IncidentRegistrationScreen({ navigation }) {
             theme={theme} highContrast={highContrast} dynamicText={dynamicText}
           />
 
-          {/* GPS */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, dynamicText(14, '600', theme.text)]}>Localização GPS *</Text>
             <View style={styles.rowInput}>
@@ -421,7 +416,6 @@ export default function IncidentRegistrationScreen({ navigation }) {
             theme={theme} highContrast={highContrast} dynamicText={dynamicText}
           />
 
-          {/* NOVO CAMPO: PONTO DE REFERÊNCIA */}
           <FormInput 
             label="Ponto de Referência" 
             placeholder="Ex: Próximo ao mercado, ao lado da escola..."
@@ -474,7 +468,6 @@ export default function IncidentRegistrationScreen({ navigation }) {
             theme={theme} highContrast={highContrast} dynamicText={dynamicText}
           />
 
-          {/* Mídia */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, dynamicText(14, '600', theme.text)]}>Fotos e Evidências</Text>
             <View style={styles.rowButtons}>
@@ -488,7 +481,6 @@ export default function IncidentRegistrationScreen({ navigation }) {
               </TouchableOpacity>
             </View>
             
-            {/* Lista Horizontal de Fotos COM BOTÃO DE DELETAR */}
             {photos.length > 0 && (
               <ScrollView horizontal style={{ marginTop: 10 }}>
                 {photos.map((photo, index) => (
@@ -506,7 +498,6 @@ export default function IncidentRegistrationScreen({ navigation }) {
             )}
           </View>
 
-          {/* Assinatura */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, dynamicText(14, '600', theme.text)]}>Assinatura do Responsável</Text>
             {signature ? (
@@ -527,10 +518,9 @@ export default function IncidentRegistrationScreen({ navigation }) {
             )}
           </View>
 
-          {/* Botões de Ação */}
-          <View style={styles.actionButtonsContainer}>
+          <View style={createStyles(fontSizeLevel).actionButtonsContainer}>
             <TouchableOpacity 
-              style={[styles.submitButton, { backgroundColor: theme.primary, flex: 1 }]}
+              style={[createStyles(fontSizeLevel).submitButton, { backgroundColor: theme.primary, flex: 1 }]}
               onPress={handleRegister}
               disabled={loading}
             >
@@ -538,7 +528,7 @@ export default function IncidentRegistrationScreen({ navigation }) {
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={[styles.submitButton, { backgroundColor: theme.textSecondary, flex: 1 }]}
+              style={[createStyles(fontSizeLevel).submitButton, { backgroundColor: theme.textSecondary, flex: 1 }]}
               onPress={handleSaveOffline}
               disabled={loading}
             >
@@ -550,7 +540,6 @@ export default function IncidentRegistrationScreen({ navigation }) {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Modal de Assinatura */}
       <Modal visible={isSignatureModalVisible} animationType="slide">
         <SafeAreaView style={{ flex: 1, backgroundColor: '#FFF' }}>
           <View style={styles.signatureHeader}>
@@ -580,6 +569,23 @@ export default function IncidentRegistrationScreen({ navigation }) {
     </SafeAreaView>
   );
 }
+
+const createStyles = (fontSizeLevel) => StyleSheet.create({
+  actionButtonsContainer: {
+    flexDirection: fontSizeLevel >= 1.6 ? 'column' : 'row',
+    gap: 10,
+    marginBottom: 40,
+  },
+  submitButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: fontSizeLevel >= 1.3 ? 20 : 16,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    minHeight: fontSizeLevel >= 1.3 ? 56 : 48,
+  },
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -629,7 +635,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
   },
-  // Estilos para a miniatura e o botão de deletar
   photoContainer: {
     position: 'relative',
     marginRight: 15,
@@ -699,18 +704,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#314697',
     alignItems: 'center',
-  },
-  actionButtonsContainer: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 40,
-  },
-  submitButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 12,
   },
   modalOverlay: {
     flex: 1,

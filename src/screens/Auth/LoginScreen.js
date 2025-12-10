@@ -1,33 +1,54 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  StyleSheet, 
+import React, { useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Alert,
   ActivityIndicator,
-  Image // Mudei para Image se for usar PNG/JPG, ou mantenha SVG se preferir
+  Image
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Ionicons } from '@expo/vector-icons'; 
+import { Ionicons } from '@expo/vector-icons';
 
 import { loginUser } from '../../services/authService';
 import { useUser } from '../../contexts/UserContext';
 
-// Se seu logo for SVG e você configurou o transformer:
-import Logo from '../../assets/logo.svg'; 
+import Logo from '../../assets/logo.svg';
 
 export default function LoginScreen({ navigation }) {
   const [matricula, setMatricula] = useState('');
   const [senha, setSenha] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
-  const { signIn } = useUser(); 
+  const scrollViewRef = useRef(null);
+  const { signIn } = useUser();
+
+  const handleInputFocus = () => {
+    setIsInputFocused(true);
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({
+        y: 200,
+        animated: true,
+      });
+    }, 100);
+  };
+
+  const handleInputBlur = () => {
+    setIsInputFocused(false);
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({
+        y: 0,
+        animated: true,
+      });
+    }, 100);
+  };
 
   const handleLogin = async () => {
     if (!matricula || !senha) {
@@ -38,14 +59,12 @@ export default function LoginScreen({ navigation }) {
     setIsLoading(true);
 
     try {
-      // 1. AQUI A MUDANÇA: Capturamos o retorno da API em uma variável
       const userData = await loginUser(matricula, senha);
-      
-      console.log('Dados recebidos no LoginScreen:', userData); // Para você conferir no terminal
 
-      // 2. Passamos o objeto COMPLETO (com nome e role) para o contexto
-      signIn(userData); 
-      
+      console.log('Dados recebidos no LoginScreen:', userData); 
+
+      signIn(userData);
+
     } catch (error) {
       console.error(error);
       Alert.alert('Erro de Acesso', 'Verifique suas credenciais.');
@@ -57,22 +76,29 @@ export default function LoginScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
-      
-      <KeyboardAvoidingView 
+
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          
+        <ScrollView 
+          ref={scrollViewRef}
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Ionicons name="chevron-back" size={24} color="#333" />
           </TouchableOpacity>
 
           <View style={styles.header}>
-            <View style={styles.logoContainer}>
-               {/* Se o SVG der erro, comente e use um Text provisório */}
-               <Logo width={200} height={200} />
-            </View>
+            {!isInputFocused && (
+              <View style={styles.logoContainer}>
+                <Logo width={200} height={200} />
+              </View>
+            )}
             <Text style={styles.welcomeText}>Bem-vindo!</Text>
             <Text style={styles.instructionText}>
               Digite sua Matrícula para acessar o sistema
@@ -90,6 +116,8 @@ export default function LoginScreen({ navigation }) {
                 onChangeText={setMatricula}
                 keyboardType="numeric"
                 autoCapitalize="none"
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
               />
             </View>
 
@@ -102,11 +130,13 @@ export default function LoginScreen({ navigation }) {
                 value={senha}
                 onChangeText={setSenha}
                 secureTextEntry
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
               />
             </View>
 
-            <TouchableOpacity 
-              style={styles.loginButton} 
+            <TouchableOpacity
+              style={styles.loginButton}
               onPress={handleLogin}
               disabled={isLoading}
             >
@@ -126,7 +156,12 @@ export default function LoginScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
-  scrollContainer: { flexGrow: 1, padding: 24, justifyContent: 'center' },
+  scrollContainer: { 
+    flexGrow: 1, 
+    padding: 24, 
+    justifyContent: 'center',
+    paddingBottom: 50
+  },
   backButton: { marginBottom: 24, width: 40, height: 40, justifyContent: 'center' },
   header: { alignItems: 'center', marginBottom: 40 },
   logoContainer: { marginBottom: 20 },
