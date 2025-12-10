@@ -6,12 +6,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/AccessibilityContext';
 import { useUser } from '../contexts/UserContext';
 
-import DashboardScreen from '../screens/Main/DashboardScreen';
-import SettingsMenuScreen from '../screens/Main/Settings/SettingsMenuScreen';
-import AccessibilityScreen from '../screens/Main/Settings/AccessibilityScreen';
-import MyIncidentsScreen from '../screens/Main/MyIncidentsScreen';
-import IncidentRegistrationScreen from '../screens/Main/IncidentRegistrationScreen';
-import IncidentSuccessScreen from '../screens/Main/IncidentSuccessScreen';
+import DashboardScreen from '../screens/main/DashboardScreen';
+import SettingsMenuScreen from '../screens/main/Settings/SettingsMenuScreen';
+import AccessibilityScreen from '../screens/main/Settings/AccessibilityScreen';
+import AboutScreen from '../screens/main/Settings/AboutScreen';
+import MyIncidentsScreen from '../screens/main/MyIncidentsScreen';
+import IncidentRegistrationScreen from '../screens/main/IncidentRegistrationScreen';
+import IncidentSuccessScreen from '../screens/main/IncidentSuccessScreen';
 
 const Stack = createStackNavigator();
 
@@ -101,6 +102,13 @@ export default function AppNavigator() {
         component={AccessibilityScreen}
         options={{ title: 'Acessibilidade' }}
       />
+
+      <Stack.Screen
+        name="About"
+        component={AboutScreen}
+        options={{ title: 'Sobre o App' }}
+      />
+
       {/* Tela de Sucesso na Ocorrência */}
       <Stack.Screen 
        name="IncidentSuccess" 

@@ -5,12 +5,15 @@ const UserContext = createContext({});
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null); 
 
-  const signIn = (userData) => {
-    // Atualizado para Carlos Ferreira
+  // Agora signIn recebe o objeto completo que veio do backend
+  const signIn = (apiResponse) => {
     setUser({ 
-      name: 'Carlos Ferreira', 
-      role: '2º Tenente',
-      matricula: userData?.matricula || '123456'
+      id: apiResponse.id,
+      // Se o backend mandar 'name', usa ele. Se não, usa um fallback
+      name: apiResponse.name || 'Usuário', 
+      // Se o backend mandar 'role', usa ele. Se não, usa 'Bombeiro'
+      role: apiResponse.role || 'Bombeiro',
+      matricula: apiResponse.matricula
     }); 
   };
 
