@@ -1,14 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity, 
-  RefreshControl,
-  StatusBar,
-  Image,
-  Dimensions
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, 
+  RefreshControl, StatusBar, Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '../../contexts/UserContext';
@@ -16,8 +9,6 @@ import { useTheme } from '../../contexts/AccessibilityContext';
 import { API_URL } from '../../services/api';
 
 import CarlosImg from '../../assets/Carlos.jpg'; 
-
-const { width } = Dimensions.get('window');
 
 export default function DashboardScreen({ navigation }) {
   const { user } = useUser();
@@ -54,31 +45,20 @@ export default function DashboardScreen({ navigation }) {
     setRefreshing(false);
   }, []);
 
-  // --- LÓGICA DE CORES DINÂMICAS ---
-  
+  // Cores Base
   const primaryColor = theme.primary; 
   const isDarkMode = theme.background !== '#FFFFFF' || isHighContrast;
-
-  // 1. HEADER E PATENTE
-  const headerTextColor = isDarkMode ? '#000000' : '#FFFFFF';
-  const universalBorderColor = '#FFFFFF';
-  // AJUSTE SOLICITADO: No alto contraste, a patente fica preta. No normal, dourada.
-  const roleColor = isHighContrast ? '#000000' : '#FFD700';
-
-  // 2. CORPO DA TELA
+  
   const screenBg = isDarkMode ? theme.background : '#F4F6F9';
   const cardBg = isDarkMode ? '#1E1E1E' : '#FFFFFF';
   const secondaryButtonBg = isDarkMode ? '#333333' : '#FFFFFF'; 
   const secondaryBorderColor = isDarkMode ? '#FFFFFF' : '#E5E7EB';
   const textColor = theme.text;
   const subTextColor = isDarkMode ? '#AAAAAA' : '#666666';
-
-  // 3. BOTÃO NOVA OCORRÊNCIA (Contraste no Amarelo)
-  // Se for alto contraste (fundo amarelo), texto deve ser preto.
-  // Se for normal (fundo azul), texto deve ser branco.
-  const btnTextColor = isHighContrast ? '#000000' : '#FFFFFF';
-  const btnSubTextColor = isHighContrast ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.8)';
-  const btnIconBg = isHighContrast ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.2)';
+  
+  // Cores do Header
+  const headerTextColor = isDarkMode ? '#000000' : '#FFFFFF'; // Se fundo escuro/contraste, texto preto
+  const borderColor = '#FFFFFF';
 
   return (
     <View style={[styles.container, { backgroundColor: screenBg }]}>
@@ -87,76 +67,47 @@ export default function DashboardScreen({ navigation }) {
       {/* HEADER */}
       <View style={[styles.header, { backgroundColor: primaryColor }]}>
         <View style={styles.headerContent}>
-          
           <View style={styles.profileContainer}>
-            <Image 
-              source={CarlosImg} 
-              style={[
-                styles.profileImage, 
-                { borderColor: universalBorderColor } 
-              ]} 
-            />
-            <View style={[
-              styles.profileOnlineIndicator,
-              { borderColor: universalBorderColor } 
-            ]} />
+            <Image source={CarlosImg} style={[styles.profileImage, { borderColor }]} />
+            <View style={[styles.profileOnlineIndicator, { borderColor }]} />
           </View>
 
           <View style={styles.userInfo}>
             <Text style={[
               styles.headerWelcome, 
-              { color: isDarkMode ? '#000000' : 'rgba(255,255,255,0.9)' } 
+              { color: isDarkMode ? '#000000' : 'rgba(255,255,255,0.9)' }
             ]}>
               Bem-vindo ao SIGO
             </Text>
-            
-            <Text 
-              style={[styles.headerName, { color: headerTextColor }]} 
-              numberOfLines={1}
-            >
+            <Text style={[styles.headerName, { color: headerTextColor }]} numberOfLines={1}>
               {user?.name || 'Carlos Ferreira'}
             </Text>
-            
-            <View style={[
-              styles.roleBadge, 
-              { backgroundColor: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)' }
-            ]}>
-              {/* COR DA PATENTE APLICADA AQUI */}
-              <Text style={[styles.headerRole, { color: roleColor }]}>
-                {user?.role || '2º Tenente'}
-              </Text>
+            <View style={[styles.roleBadge, { backgroundColor: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)' }]}>
+              <Text style={styles.headerRole}>{user?.role || '2º Tenente'}</Text>
             </View>
           </View>
-
         </View>
       </View>
 
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primaryColor} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primaryColor} />}
         showsVerticalScrollIndicator={false}
       >
         {/* CARDS DE STATUS */}
         <View style={styles.statsRow}>
-          <View style={[
-            styles.statCard, 
-            { backgroundColor: cardBg, borderColor: isDarkMode ? '#FFFFFF' : primaryColor }
-          ]}>
+          <View style={[styles.statCard, { backgroundColor: cardBg, borderColor: isDarkMode ? '#FFFFFF' : primaryColor }]}>
             <View style={[styles.iconCircle, { backgroundColor: 'rgba(49, 70, 151, 0.1)' }]}>
               <Ionicons name="alert-circle" size={28} color={primaryColor} />
             </View>
             <Text style={[styles.statNumber, { color: primaryColor }]}>
               {stats.ocorrenciasHoje}
             </Text>
-            <Text style={[styles.statLabel, { color: subTextColor }]}>Ocorrências Hoje</Text>
+            {/* MUDANÇA DE TEXTO AQUI: De "Hoje" para "Ativas" */}
+            <Text style={[styles.statLabel, { color: subTextColor }]}>Ocorrências Ativas</Text>
           </View>
 
-          <View style={[
-            styles.statCard, 
-            { backgroundColor: cardBg, borderColor: isDarkMode ? '#FFFFFF' : primaryColor }
-          ]}>
+          <View style={[styles.statCard, { backgroundColor: cardBg, borderColor: isDarkMode ? '#FFFFFF' : primaryColor }]}>
             <View style={[styles.iconCircle, { backgroundColor: 'rgba(46, 204, 113, 0.1)' }]}>
               <Ionicons name="people" size={28} color="#2ECC71" />
             </View>
@@ -171,17 +122,8 @@ export default function DashboardScreen({ navigation }) {
         <Text style={[styles.sectionTitle, { color: textColor }]}>Painel de Controle</Text>
         
         <View style={styles.actionsContainer}>
-          
           <TouchableOpacity 
-            style={[
-              styles.actionButton, 
-              styles.shadowProp, 
-              { 
-                backgroundColor: secondaryButtonBg,
-                borderWidth: 1,               
-                borderColor: secondaryBorderColor
-              }
-            ]}
+            style={[styles.actionButton, styles.shadowProp, { backgroundColor: secondaryButtonBg, borderWidth: 1, borderColor: secondaryBorderColor }]}
             onPress={() => navigation.navigate('MyIncidents')}
             activeOpacity={0.7}
           >
@@ -196,15 +138,7 @@ export default function DashboardScreen({ navigation }) {
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={[
-              styles.actionButton, 
-              styles.shadowProp, 
-              { 
-                backgroundColor: secondaryButtonBg,
-                borderWidth: 1,               
-                borderColor: secondaryBorderColor 
-              }
-            ]}
+            style={[styles.actionButton, styles.shadowProp, { backgroundColor: secondaryButtonBg, borderWidth: 1, borderColor: secondaryBorderColor }]}
             onPress={() => navigation.navigate('SettingsMenu')} 
             activeOpacity={0.7}
           >
@@ -218,24 +152,21 @@ export default function DashboardScreen({ navigation }) {
             <Ionicons name="chevron-forward" size={20} color={subTextColor} />
           </TouchableOpacity>
 
-          {/* BOTÃO NOVA OCORRÊNCIA (AJUSTADO PARA CONTRASTE) */}
           <TouchableOpacity 
             style={[styles.actionButton, styles.shadowProp, { backgroundColor: primaryColor }]}
             onPress={() => navigation.navigate('IncidentRegistration')}
             activeOpacity={0.8}
           >
-            <View style={[styles.actionIconBox, { backgroundColor: btnIconBg }]}>
-              <Ionicons name="add" size={30} color={btnTextColor} />
+            <View style={[styles.actionIconBox, { backgroundColor: isHighContrast ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.2)' }]}>
+              <Ionicons name="add" size={30} color={isHighContrast ? '#000' : '#FFF'} />
             </View>
             <View style={styles.actionTexts}>
-              <Text style={[styles.actionTitle, { color: btnTextColor }]}>Nova Ocorrência</Text>
-              <Text style={[styles.actionSubtitle, { color: btnSubTextColor }]}>Registrar novo chamado</Text>
+              <Text style={[styles.actionTitle, { color: isHighContrast ? '#000' : '#FFF' }]}>Nova Ocorrência</Text>
+              <Text style={[styles.actionSubtitle, { color: isHighContrast ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.8)' }]}>Registrar novo chamado</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={btnSubTextColor} />
+            <Ionicons name="chevron-forward" size={20} color={isHighContrast ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)'} />
           </TouchableOpacity>
-
         </View>
-
       </ScrollView>
     </View>
   );
@@ -243,148 +174,30 @@ export default function DashboardScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  header: { paddingTop: 20, paddingBottom: 20, paddingHorizontal: 25, elevation: 8, zIndex: 10 },
+  headerContent: { flexDirection: 'row', alignItems: 'center' },
+  profileContainer: { position: 'relative' },
+  profileImage: { width: 100, height: 100, borderRadius: 20, borderWidth: 2 },
+  profileOnlineIndicator: { position: 'absolute', bottom: 0, right: 0, width: 15, height: 15, borderRadius: 10, backgroundColor: '#2ECC71', borderWidth: 2 },
+  userInfo: { marginLeft: 22, flex: 1 },
+  headerWelcome: { fontSize: 14, fontWeight: '500', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 1 },
+  headerName: { fontSize: 26, fontWeight: 'bold', letterSpacing: 0.5 },
+  roleBadge: { marginTop: 8, paddingVertical: 4, paddingHorizontal: 12, borderRadius: 6, alignSelf: 'flex-start' },
+  headerRole: { color: '#FFD700', fontSize: 13, fontWeight: 'bold', textTransform: 'uppercase' },
   
-  header: {
-    paddingTop: 20,
-    paddingBottom: 20,
-    paddingHorizontal: 25,
-    elevation: 8,
-    zIndex: 10,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  profileContainer: {
-    position: 'relative',
-  },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 20, 
-    borderWidth: 2,
-  },
-  profileOnlineIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 15,
-    height: 15,
-    borderRadius: 10,
-    backgroundColor: '#2ECC71',
-    borderWidth: 2,
-  },
-  userInfo: {
-    marginLeft: 22,
-    flex: 1,
-  },
-  headerWelcome: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  headerName: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
-  },
-  roleBadge: {
-    marginTop: 8,
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    alignSelf: 'flex-start',
-  },
-  headerRole: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-  },
-
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 15,
-    marginTop: 20,
-    marginBottom: 30,
-  },
-  statCard: {
-    flex: 1,
-    borderRadius: 12,
-    padding: 20,
-    alignItems: 'center',
-    borderWidth: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  iconCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  statNumber: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    marginLeft: 5,
-  },
-  actionsContainer: {
-    gap: 15,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 15,
-    borderRadius: 12,
-    height: 80,
-  },
-  shadowProp: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  actionIconBox: {
-    width: 50,
-    height: 50,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 15,
-  },
-  actionTexts: {
-    flex: 1,
-  },
-  actionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 2,
-  },
-  actionSubtitle: {
-    fontSize: 13,
-  },
+  scrollContent: { padding: 20, paddingBottom: 40 },
+  statsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 15, marginTop: 20, marginBottom: 30 },
+  statCard: { flex: 1, borderRadius: 12, padding: 20, alignItems: 'center', borderWidth: 2, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 4 },
+  iconCircle: { width: 50, height: 50, borderRadius: 25, justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
+  statNumber: { fontSize: 28, fontWeight: 'bold', marginBottom: 4 },
+  statLabel: { fontSize: 12, fontWeight: '600' },
+  
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, marginLeft: 5 },
+  actionsContainer: { gap: 15 },
+  actionButton: { flexDirection: 'row', alignItems: 'center', padding: 15, borderRadius: 12, height: 80 },
+  shadowProp: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3, elevation: 2 },
+  actionIconBox: { width: 50, height: 50, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+  actionTexts: { flex: 1 },
+  actionTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 2 },
+  actionSubtitle: { fontSize: 13 },
 });

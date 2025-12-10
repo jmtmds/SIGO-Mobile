@@ -111,12 +111,18 @@ export default function MyIncidentsScreen({ navigation }) {
     }
   };
 
-  // --- STATUS ---
+  // --- STATUS (ATUALIZADO COM OPÇÃO DE REABRIR) ---
   const handleStatusChange = (item) => {
-    Alert.alert("Atualizar Status", `Ocorrência: ${formatCategory(item.categoria)}`,
-      [{ text: "Cancelar", style: "cancel" },
-       { text: "Em Andamento", onPress: () => changeStatus(item.id, "Em Andamento") },
-       { text: "Finalizada", onPress: () => changeStatus(item.id, "Finalizada") }]
+    Alert.alert(
+      "Atualizar Status",
+      `Ocorrência: ${formatCategory(item.categoria)}`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        // OPÇÃO NOVA:
+        { text: "Reabrir (Aberta)", onPress: () => changeStatus(item.id, "Aberta") },
+        { text: "Em Andamento", onPress: () => changeStatus(item.id, "Em Andamento") },
+        { text: "Finalizada", onPress: () => changeStatus(item.id, "Finalizada") }
+      ]
     );
   };
 
@@ -179,15 +185,13 @@ export default function MyIncidentsScreen({ navigation }) {
   };
 
   const renderDetailModal = () => {
-    // --- LÓGICA DE CORES DO MODAL CORRIGIDA ---
-    
-    // Detecta se é tema escuro (pelo modo ou pela cor de fundo)
+    // Detecta tema escuro (para cor do fundo do modal)
     const isDarkTheme = theme.mode === 'dark' || theme.background === '#000000' || theme.background === '#121212';
-
-    // 1. Cor de Fundo do Modal
-    let modalBgColor = '#FFFFFF'; // Padrão Claro
-    if (isHighContrast) modalBgColor = '#000000'; // Preto Absoluto no Contraste
-    else if (isDarkTheme) modalBgColor = '#1E1E1E'; // Cinza Escuro no Modo Noturno
+    
+    // 1. Cor de Fundo do Modal (CORRIGIDA)
+    let modalBgColor = '#FFFFFF'; 
+    if (isHighContrast) modalBgColor = '#000000'; 
+    else if (isDarkTheme) modalBgColor = '#1E1E1E';
 
     // 2. Cor do Texto
     const contentTextColor = (isHighContrast || isDarkTheme) ? '#FFFFFF' : '#333333';
@@ -195,17 +199,14 @@ export default function MyIncidentsScreen({ navigation }) {
     // 3. Cores dos Inputs (Edição)
     let inputBg = '#F5F7FA';
     let inputBorder = '#E0E0E0';
-    
-    if (isHighContrast) {
-        inputBg = '#1A1A1A';
-        inputBorder = theme.primary; // Borda Amarela no contraste
-    } else if (isDarkTheme) {
-        inputBg = '#333333';
-        inputBorder = '#555555';
-    }
+    if (isHighContrast) { inputBg = '#1A1A1A'; inputBorder = theme.primary; } 
+    else if (isDarkTheme) { inputBg = '#333333'; inputBorder = '#555555'; }
 
-    // 4. Header Text Color
     const headerTextColor = isHighContrast ? '#000' : '#FFF';
+    const closeBtnBg = isHighContrast ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)';
+    
+    const inactiveBorder = (isHighContrast || isDarkTheme) ? '#FFF' : '#000';
+    const inactiveText = (isHighContrast || isDarkTheme) ? '#FFF' : '#000';
 
     const priorityOptions = ['Baixa', 'Média', 'Alta'];
 
@@ -216,14 +217,14 @@ export default function MyIncidentsScreen({ navigation }) {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.keyboardAvoidingView}
           >
-            {/* APLICAÇÃO DA COR DE FUNDO DINÂMICA AQUI */}
+            {/* APLICAÇÃO DA COR DE FUNDO AQUI */}
             <View style={[styles.modalContent, { backgroundColor: modalBgColor }]}>
               
               <View style={[styles.modalHeader, { backgroundColor: theme.primary }]}>
                 <Text style={[styles.modalTitle, { color: headerTextColor }]}>
                   {isEditing ? "Editar Ocorrência" : "Detalhes"}
                 </Text>
-                <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
+                <TouchableOpacity onPress={() => setModalVisible(false)} style={[styles.closeButton, { backgroundColor: closeBtnBg }]}>
                   <Ionicons name="close" size={24} color={headerTextColor} />
                 </TouchableOpacity>
               </View>
@@ -250,10 +251,6 @@ export default function MyIncidentsScreen({ navigation }) {
                       {priorityOptions.map((opt) => {
                         const isActive = editForm.prioridade === opt;
                         const activeColor = getPriorityColor(opt);
-                        // Borda inativa: Branca no escuro, Preta no claro
-                        const inactiveBorder = (isHighContrast || isDarkTheme) ? '#FFF' : '#000';
-                        const inactiveText = (isHighContrast || isDarkTheme) ? '#FFF' : '#000';
-
                         return (
                           <TouchableOpacity key={opt}
                             style={[
@@ -415,7 +412,7 @@ const styles = StyleSheet.create({
   },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20 },
   modalTitle: { fontSize: 22, fontWeight: 'bold', letterSpacing: 0.5 },
-  closeButton: { padding: 5, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 20 },
+  closeButton: { padding: 5, borderRadius: 20 },
   modalBody: { padding: 20 },
   detailRow: { marginBottom: 20 },
   labelContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
