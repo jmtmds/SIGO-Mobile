@@ -107,7 +107,8 @@ export default function MyIncidentsScreen({ navigation }) {
       setIncidents(prev => prev.filter(i => i.id !== selectedIncident.id));
       Alert.alert("Deletado", "Ocorrência removida com sucesso.");
     } catch (error) {
-      Alert.alert("Erro", "Não foi possível deletar.");
+      console.error('Erro detalhado ao deletar:', error);
+      Alert.alert("Erro", `Não foi possível deletar: ${error.message || 'Erro desconhecido'}`);
     }
   };
 

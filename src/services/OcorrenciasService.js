@@ -112,14 +112,25 @@ export const updateIncident = async (id, data) => {
 export const deleteIncident = async (id) => {
   try {
     console.log(`[OcorrenciasService] Deletando ID ${id}`);
+    console.log(`[OcorrenciasService] URL: ${API_URL}/occurrence/${id}`);
+    
     const response = await fetch(`${API_URL}/occurrence/${id}`, {
       method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
 
+    console.log(`[OcorrenciasService] Response status: ${response.status}`);
+    console.log(`[OcorrenciasService] Response ok: ${response.ok}`);
+
     if (!response.ok) {
-      throw new Error('Falha ao deletar ocorrência');
+      const errorText = await response.text();
+      console.log(`[OcorrenciasService] Error response: ${errorText}`);
+      throw new Error(`Falha ao deletar ocorrência: ${response.status} - ${errorText}`);
     }
     
+    console.log(`[OcorrenciasService] Delete successful`);
     return true;
   } catch (error) {
     console.error('[OcorrenciasService] Erro ao deletar:', error);

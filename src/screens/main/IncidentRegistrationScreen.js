@@ -1,19 +1,8 @@
 import React, { useState, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-  ActivityIndicator,
-  Modal,
-  FlatList,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView
+import { 
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, 
+  TextInput, Alert, ActivityIndicator, Modal, FlatList, Image,
+  KeyboardAvoidingView, Platform, SafeAreaView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
@@ -33,8 +22,8 @@ const FormInput = ({ label, value, onChangeText, placeholder, multiline = false,
     <Text style={[styles.label, dynamicText(14, '600', theme.text)]}>{label}</Text>
     <TextInput
       style={[
-        styles.input,
-        {
+        styles.input, 
+        { 
           backgroundColor: editable ? theme.inputBackground : (highContrast ? '#000' : '#E0E0E0'),
           color: theme.text,
           borderColor: highContrast ? theme.border : theme.border,
@@ -55,18 +44,18 @@ const FormInput = ({ label, value, onChangeText, placeholder, multiline = false,
   </View>
 );
 
-const CustomDropdown = ({ label, options, selectedValue, onSelect, placeholder, theme, highContrast, dynamicText, fontSizeLevel }) => {
+const CustomDropdown = ({ label, options, selectedValue, onSelect, placeholder, theme, highContrast, dynamicText, fontSizeLevel, disabled = false }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const selectedLabel = options.find(o => o.value === selectedValue)?.label;
 
   return (
-    <View style={styles.inputGroup}>
+    <View style={[styles.inputGroup, disabled && { opacity: 0.5 }]}>
       <Text style={[styles.label, dynamicText(14, '600', theme.text)]}>{label}</Text>
       <TouchableOpacity
         style={[
-          styles.input,
-          {
-            backgroundColor: theme.inputBackground,
+          styles.input, 
+          { 
+            backgroundColor: theme.inputBackground, 
             borderColor: highContrast ? theme.border : theme.border,
             borderWidth: 1,
             flexDirection: 'row',
@@ -74,7 +63,8 @@ const CustomDropdown = ({ label, options, selectedValue, onSelect, placeholder, 
             alignItems: 'center'
           }
         ]}
-        onPress={() => setModalVisible(true)}
+        onPress={() => !disabled && setModalVisible(true)}
+        disabled={disabled}
       >
         <Text style={{ color: selectedLabel ? theme.text : theme.textSecondary, fontSize: 16 * fontSizeLevel }}>
           {selectedLabel || placeholder}
@@ -117,18 +107,18 @@ const CustomDropdown = ({ label, options, selectedValue, onSelect, placeholder, 
 export default function IncidentRegistrationScreen({ navigation }) {
   const { theme, fontSizeLevel, highContrast, isDarkMode } = useTheme();
   const { user } = useUser();
-
+  
   const [loading, setLoading] = useState(false);
   const [gpsLoading, setGpsLoading] = useState(false);
-
+  
   const [photos, setPhotos] = useState([]);
-  const [signature, setSignature] = useState(null);
+  const [signature, setSignature] = useState(null); 
   const [isSignatureModalVisible, setIsSignatureModalVisible] = useState(false);
   const signatureRef = useRef();
 
   const [formData, setFormData] = useState({
     endereco: '',
-    pontoReferencia: '',
+    pontoReferencia: '', // Já estava no state, agora vai aparecer na tela!
     tipo: '',
     subtipo: '',
     prioridade: '',
@@ -143,6 +133,7 @@ export default function IncidentRegistrationScreen({ navigation }) {
     color: color
   });
 
+  // Opções de Categoria Principal
   const tiposOcorrencia = [
     { label: 'Incêndio', value: 'fire' },
     { label: 'Acidente de Trânsito', value: 'traffic_accident' },
@@ -151,11 +142,48 @@ export default function IncidentRegistrationScreen({ navigation }) {
     { label: 'Outros', value: 'other' },
   ];
 
+  // Opções de Prioridade
   const prioridades = [
     { label: 'Baixa', value: 'low' },
     { label: 'Média', value: 'medium' },
     { label: 'Alta', value: 'high' },
   ];
+
+  // Lógica para filtrar Subtipos
+  const getSubtipos = (tipo) => {
+    switch (tipo) {
+      case 'fire':
+        return [
+          { label: 'Vegetação', value: 'vegetation' },
+          { label: 'Comercial', value: 'comercial' },
+          { label: 'Residencial', value: 'residential' },
+          { label: 'Veículo', value: 'vehicle' },
+        ];
+      case 'traffic_accident':
+        return [
+          { label: 'Colisão', value: 'collision' },
+          { label: 'Capotamento', value: 'rollover' },
+          { label: 'Acidente de Moto', value: 'motorcycle_crash' },
+        ];
+      case 'medic_emergency':
+        return [
+          { label: 'Parada Cardiorrespiratória', value: 'heart_stop' },
+          { label: 'Convulsão', value: 'seizure' },
+          { label: 'Intoxicação', value: 'intoxication' },
+          { label: 'Lesão Grave', value: 'serious_injury' },
+          { label: 'Atendimento Pré-Hospitalar', value: 'pre_hospital_care' },
+        ];
+      case 'rescue': 
+      case 'other':
+        return [
+          { label: 'Animal Ferido', value: 'injured_animal' },
+          { label: 'Inundação', value: 'flood' },
+          { label: 'Queda de Árvore', value: 'tree_crash' },
+        ];
+      default:
+        return [];
+    }
+  };
 
   const handleGetLocation = async () => {
     setGpsLoading(true);
@@ -175,7 +203,7 @@ export default function IncidentRegistrationScreen({ navigation }) {
           longitude: location.coords.longitude
         }
       }));
-
+      
       try {
         let address = await Location.reverseGeocodeAsync({
           latitude: location.coords.latitude,
@@ -205,7 +233,7 @@ export default function IncidentRegistrationScreen({ navigation }) {
       const options = {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         quality: 0.5,
-        base64: true,
+        base64: true, 
       };
 
       if (useCamera) {
@@ -240,7 +268,7 @@ export default function IncidentRegistrationScreen({ navigation }) {
     try {
       setLoading(true);
 
-      const photosHtml = photos.map(photo =>
+      const photosHtml = photos.map(photo => 
         `<div style="margin: 10px; display: inline-block;">
            <img src="data:image/jpeg;base64,${photo.base64}" style="width: 150px; height: 150px; border: 2px solid #ccc; border-radius: 8px;" />
          </div>`
@@ -252,9 +280,11 @@ export default function IncidentRegistrationScreen({ navigation }) {
             <h1 style="color: #314697;">Relatório de Ocorrência</h1>
             <p><strong>Responsável:</strong> ${user?.name} (Mat: ${user?.matricula})</p>
             <p><strong>Tipo:</strong> ${formData.tipo}</p>
+            <p><strong>Subtipo:</strong> ${formData.subtipo}</p>
             <p><strong>Prioridade:</strong> ${formData.prioridade}</p>
             <p><strong>Viatura:</strong> ${formData.codigoViatura}</p>
             <p><strong>Endereço:</strong> ${formData.endereco}</p>
+            <p><strong>Ponto de Referência:</strong> ${formData.pontoReferencia || '---'}</p>
             <p><strong>Coordenadas:</strong> ${formData.gps ? `${formData.gps.latitude}, ${formData.gps.longitude}` : 'N/A'}</p>
             
             <h3>Descrição</h3>
@@ -285,8 +315,15 @@ export default function IncidentRegistrationScreen({ navigation }) {
   };
 
   const handleRegister = async () => {
+    // Validação básica
     if (!formData.endereco || !formData.tipo || !formData.prioridade || !formData.codigoViatura) {
       Alert.alert('Campos Obrigatórios', 'Preencha Endereço, Tipo, Prioridade e Viatura.');
+      return;
+    }
+
+    const opcoesSubtipo = getSubtipos(formData.tipo);
+    if (opcoesSubtipo.length > 0 && !formData.subtipo) {
+      Alert.alert('Atenção', 'Selecione uma Subcategoria.');
       return;
     }
 
@@ -295,14 +332,14 @@ export default function IncidentRegistrationScreen({ navigation }) {
     try {
       const payload = {
         ...formData,
-        gps: formData.gps ? [formData.gps.latitude, formData.gps.longitude] : [0, 0],
-        idEquipes: []
+        gps: formData.gps ? [formData.gps.latitude, formData.gps.longitude] : [0, 0], 
+        idEquipes: [] 
       };
 
       await registerIncident(payload);
-
+      
       const mockProtocol = `2025-${Math.floor(Math.random() * 100000)}`;
-
+      
       navigation.replace('IncidentSuccess', {
         protocol: mockProtocol,
         date: new Date().toLocaleString('pt-BR')
@@ -320,35 +357,35 @@ export default function IncidentRegistrationScreen({ navigation }) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-      <KeyboardAvoidingView
+      <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
       >
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: 150 }]}
+        <ScrollView 
+          style={{ flex: 1 }} 
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 150 }]} 
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={true}
-          persistentScrollbar={true}
+          persistentScrollbar={true}          
           indicatorStyle={isDarkMode ? 'white' : 'black'}
         >
-
+          
           <Text style={[styles.sectionTitle, dynamicText(18, 'bold', theme.primary)]}>
             Dados da Ocorrência
           </Text>
 
-          <FormInput
-            label="Responsável pelo Registro"
+          <FormInput 
+            label="Responsável pelo Registro" 
             value={user?.name || 'Não identificado'}
-            editable={false}
+            editable={false} 
             theme={theme} highContrast={highContrast} dynamicText={dynamicText}
           />
-
-          <FormInput
-            label="Matrícula"
+          
+          <FormInput 
+            label="Matrícula" 
             value={user?.matricula || '---'}
-            editable={false}
+            editable={false} 
             theme={theme} highContrast={highContrast} dynamicText={dynamicText}
           />
 
@@ -358,7 +395,7 @@ export default function IncidentRegistrationScreen({ navigation }) {
             <View style={styles.rowInput}>
               <TextInput
                 style={[
-                  styles.input,
+                  styles.input, 
                   { flex: 1, backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border, borderWidth: 1 }
                 ]}
                 placeholder="Aguardando captura..."
@@ -366,8 +403,8 @@ export default function IncidentRegistrationScreen({ navigation }) {
                 value={formData.gps ? `${formData.gps.latitude}, ${formData.gps.longitude}` : ''}
                 editable={false}
               />
-              <TouchableOpacity
-                style={[styles.iconButton, { backgroundColor: theme.primary }]}
+              <TouchableOpacity 
+                style={[styles.iconButton, { backgroundColor: theme.primary }]} 
                 onPress={handleGetLocation}
                 disabled={gpsLoading}
               >
@@ -376,43 +413,63 @@ export default function IncidentRegistrationScreen({ navigation }) {
             </View>
           </View>
 
-          <FormInput
-            label="Endereço (Preenchido pelo GPS)"
+          <FormInput 
+            label="Endereço (Preenchido pelo GPS)" 
             placeholder="Rua, Número, Bairro..."
             value={formData.endereco}
-            onChangeText={(text) => setFormData({ ...formData, endereco: text })}
+            onChangeText={(text) => setFormData({...formData, endereco: text})}
             theme={theme} highContrast={highContrast} dynamicText={dynamicText}
           />
 
-          <CustomDropdown
-            label="Tipo *"
-            placeholder="Selecione o tipo..."
-            options={tiposOcorrencia}
-            selectedValue={formData.tipo}
-            onSelect={(val) => setFormData({ ...formData, tipo: val })}
-            theme={theme} highContrast={highContrast} dynamicText={dynamicText} fontSizeLevel={fontSizeLevel}
+          {/* NOVO CAMPO: PONTO DE REFERÊNCIA */}
+          <FormInput 
+            label="Ponto de Referência" 
+            placeholder="Ex: Próximo ao mercado, ao lado da escola..."
+            value={formData.pontoReferencia}
+            onChangeText={(text) => setFormData({...formData, pontoReferencia: text})}
+            theme={theme} highContrast={highContrast} dynamicText={dynamicText}
           />
-          <CustomDropdown
-            label="Prioridade *"
-            placeholder="Selecione a prioridade..."
-            options={prioridades}
-            selectedValue={formData.prioridade}
-            onSelect={(val) => setFormData({ ...formData, prioridade: val })}
+
+          <CustomDropdown 
+            label="Tipo *" 
+            placeholder="Selecione o tipo..." 
+            options={tiposOcorrencia} 
+            selectedValue={formData.tipo} 
+            onSelect={(val) => setFormData({...formData, tipo: val, subtipo: ''})} 
             theme={theme} highContrast={highContrast} dynamicText={dynamicText} fontSizeLevel={fontSizeLevel}
           />
 
-          <FormInput
-            label="Código da Viatura *"
+          <CustomDropdown 
+            label="Subcategoria *" 
+            placeholder={formData.tipo ? "Selecione a subcategoria..." : "Selecione o tipo primeiro"}
+            options={getSubtipos(formData.tipo)} 
+            selectedValue={formData.subtipo} 
+            onSelect={(val) => setFormData({...formData, subtipo: val})} 
+            theme={theme} highContrast={highContrast} dynamicText={dynamicText} fontSizeLevel={fontSizeLevel}
+            disabled={!formData.tipo || getSubtipos(formData.tipo).length === 0}
+          />
+
+          <CustomDropdown 
+            label="Prioridade *" 
+            placeholder="Selecione a prioridade..." 
+            options={prioridades} 
+            selectedValue={formData.prioridade} 
+            onSelect={(val) => setFormData({...formData, prioridade: val})} 
+            theme={theme} highContrast={highContrast} dynamicText={dynamicText} fontSizeLevel={fontSizeLevel}
+          />
+
+          <FormInput 
+            label="Código da Viatura *" 
             placeholder="Ex: ABT-12"
             value={formData.codigoViatura}
-            onChangeText={(text) => setFormData({ ...formData, codigoViatura: text })}
+            onChangeText={(text) => setFormData({...formData, codigoViatura: text})}
             theme={theme} highContrast={highContrast} dynamicText={dynamicText}
           />
-          <FormInput
-            label="Descrição Inicial"
+          <FormInput 
+            label="Descrição Inicial" 
             placeholder="Descreva a situação..."
             value={formData.descricao}
-            onChangeText={(text) => setFormData({ ...formData, descricao: text })}
+            onChangeText={(text) => setFormData({...formData, descricao: text})}
             multiline
             theme={theme} highContrast={highContrast} dynamicText={dynamicText}
           />
@@ -430,15 +487,15 @@ export default function IncidentRegistrationScreen({ navigation }) {
                 <Text style={{ color: theme.primary, fontWeight: '600' }}>Galeria</Text>
               </TouchableOpacity>
             </View>
-
+            
             {/* Lista Horizontal de Fotos COM BOTÃO DE DELETAR */}
             {photos.length > 0 && (
               <ScrollView horizontal style={{ marginTop: 10 }}>
                 {photos.map((photo, index) => (
                   <View key={index} style={styles.photoContainer}>
                     <Image source={{ uri: photo.uri }} style={styles.thumbnail} />
-                    <TouchableOpacity
-                      style={styles.deletePhotoButton}
+                    <TouchableOpacity 
+                      style={styles.deletePhotoButton} 
                       onPress={() => handleRemovePhoto(index)}
                     >
                       <Ionicons name="close-circle" size={24} color="#FF0000" />
@@ -460,7 +517,7 @@ export default function IncidentRegistrationScreen({ navigation }) {
                 </TouchableOpacity>
               </View>
             ) : (
-              <TouchableOpacity
+              <TouchableOpacity 
                 style={[styles.signatureButton, { backgroundColor: theme.inputBackground, borderColor: theme.border }]}
                 onPress={() => setIsSignatureModalVisible(true)}
               >
@@ -472,7 +529,7 @@ export default function IncidentRegistrationScreen({ navigation }) {
 
           {/* Botões de Ação */}
           <View style={styles.actionButtonsContainer}>
-            <TouchableOpacity
+            <TouchableOpacity 
               style={[styles.submitButton, { backgroundColor: theme.primary, flex: 1 }]}
               onPress={handleRegister}
               disabled={loading}
@@ -480,7 +537,7 @@ export default function IncidentRegistrationScreen({ navigation }) {
               {loading ? <ActivityIndicator color="#FFF" /> : <Text style={dynamicText(16, 'bold', '#FFF')}>Enviar Ocorrência</Text>}
             </TouchableOpacity>
 
-            <TouchableOpacity
+            <TouchableOpacity 
               style={[styles.submitButton, { backgroundColor: theme.textSecondary, flex: 1 }]}
               onPress={handleSaveOffline}
               disabled={loading}
@@ -506,7 +563,7 @@ export default function IncidentRegistrationScreen({ navigation }) {
             <SignatureScreen
               ref={signatureRef}
               onOK={handleSignatureOK}
-              webStyle={`.m-signature-pad--footer {display: none; margin: 0px;}`}
+              webStyle={`.m-signature-pad--footer {display: none; margin: 0px;}`} 
             />
           </View>
           <View style={styles.signatureFooter}>
