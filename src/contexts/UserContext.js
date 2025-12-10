@@ -9,11 +9,11 @@ export const UserProvider = ({ children }) => {
   const signIn = (apiResponse) => {
     setUser({ 
       id: apiResponse.id,
-      // Se o backend mandar 'name', usa ele. Se não, usa um fallback
       name: apiResponse.name || 'Usuário', 
-      // Se o backend mandar 'role', usa ele. Se não, usa 'Bombeiro'
       role: apiResponse.role || 'Bombeiro',
-      matricula: apiResponse.matricula
+      matricula: apiResponse.matricula,
+      email: apiResponse.email || '', 
+      phone: apiResponse.phone || ''
     }); 
   };
 
