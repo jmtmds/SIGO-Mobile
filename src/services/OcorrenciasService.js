@@ -14,7 +14,6 @@ const getUserProfile = async () => {
 // 1. REGISTRAR NOVA OCORRÊNCIA
 export const registerIncident = async (incidentData) => {
   try {
-    // Busca o usuário para garantir que temos um ID válido
     const user = await getUserProfile(); 
     
     const payload = {
@@ -26,7 +25,6 @@ export const registerIncident = async (incidentData) => {
       ponto_referencia: incidentData.pontoReferencia || '',
       codigo_viatura: incidentData.codigoViatura,
       gps: incidentData.gps || [0, 0], 
-      // Se user existir, manda o ID. Se não, o backend usa o fallback (Carlos)
       userId: user ? user.id : undefined 
     };
 
@@ -54,8 +52,6 @@ export const registerIncident = async (incidentData) => {
 export const getMyIncidents = async () => {
   try {
     const user = await getUserProfile();
-    
-    // Se não tiver usuário logado, tenta buscar com ID vazio (backend trata como Carlos)
     const userId = user?.id || 'undefined';
 
     const response = await fetch(`${API_URL}/user/${userId}/occurrences`);
@@ -65,7 +61,7 @@ export const getMyIncidents = async () => {
     return await response.json();
   } catch (error) {
     console.error('[OcorrenciasService] Erro ao buscar:', error);
-    throw error; // Repassa o erro para a tela tratar (ex: parar o loading)
+    throw error; 
   }
 };
 
@@ -90,6 +86,43 @@ export const updateIncidentStatus = async (id, newStatus) => {
     return await response.json();
   } catch (error) {
     console.error('[OcorrenciasService] Erro na atualização:', error);
+    throw error;
+  }
+};
+
+// 4. EDITAR DADOS (PUT)
+export const updateIncident = async (id, data) => {
+  try {
+    console.log(`[OcorrenciasService] Editando ID ${id}`, data);
+    const response = await fetch(`${API_URL}/occurrence/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) throw new Error('Erro ao salvar edição');
+    return await response.json();
+  } catch (error) {
+    console.error('[OcorrenciasService] Erro na edição:', error);
+    throw error;
+  }
+};
+
+// 5. DELETAR OCORRÊNCIA (DELETE)
+export const deleteIncident = async (id) => {
+  try {
+    console.log(`[OcorrenciasService] Deletando ID ${id}`);
+    const response = await fetch(`${API_URL}/occurrence/${id}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      throw new Error('Falha ao deletar ocorrência');
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('[OcorrenciasService] Erro ao deletar:', error);
     throw error;
   }
 };
