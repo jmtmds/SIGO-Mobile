@@ -6,12 +6,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/AccessibilityContext';
 import { useUser } from '../contexts/UserContext';
 
-import DashboardScreen from '../screens/Main/DashboardScreen';
-import SettingsMenuScreen from '../screens/Main/Settings/SettingsMenuScreen';
-import AccessibilityScreen from '../screens/Main/Settings/AccessibilityScreen';
-import MyIncidentsScreen from '../screens/Main/MyIncidentsScreen';
-import IncidentRegistrationScreen from '../screens/Main/IncidentRegistrationScreen';
-import IncidentSuccessScreen from '../screens/Main/IncidentSuccessScreen';
+import DashboardScreen from '../screens/main/DashboardScreen';
+import SettingsMenuScreen from '../screens/main/Settings/SettingsMenuScreen';
+import EditProfileScreen from '../screens/main/Settings/EditProfileScreen';
+import AccessibilityScreen from '../screens/main/Settings/AccessibilityScreen';
+import MyIncidentsScreen from '../screens/main/MyIncidentsScreen';
+import IncidentRegistrationScreen from '../screens/main/IncidentRegistrationScreen';
+import IncidentSuccessScreen from '../screens/main/IncidentSuccessScreen';
 
 const Stack = createStackNavigator();
 
@@ -106,8 +107,13 @@ export default function AppNavigator() {
        name="IncidentSuccess" 
       component={IncidentSuccessScreen} 
      options={{ headerShown: false }} // Sem cabeçalho, igual ao Figma
+     
       />
-
+      <Stack.Screen 
+        name="EditProfile" 
+        component={EditProfileScreen} 
+        options={{ title: 'Meu Perfil' }} 
+      />
 
       {/* Rotas Placeholder (Futuras implementações) */}
       <Stack.Screen name="EditProfile" component={DashboardScreen} options={{ title: 'Editar Perfil' }} />
