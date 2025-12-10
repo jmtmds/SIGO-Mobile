@@ -180,6 +180,7 @@ export default function IncidentRegistrationScreen({ navigation }) {
     }
   };
 
+  // --- FUNÇÃO CORRIGIDA PARA EVITAR DUPLICIDADE NO ENDEREÇO ---
   const handleGetLocation = async () => {
     setGpsLoading(true);
     try {
@@ -204,9 +205,27 @@ export default function IncidentRegistrationScreen({ navigation }) {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude
         });
+        
         if (address && address.length > 0) {
           const addr = address[0];
-          const formattedAddress = `${addr.street || ''}, ${addr.name || ''} - ${addr.subregion || ''}`;
+          
+          const street = addr.street || '';
+          const name = addr.name || '';
+          const subregion = addr.subregion || '';
+          
+          // Lógica para evitar duplicação (ex: "Rua A, Rua A")
+          let addressPart = '';
+          
+          if (street && name && street !== name && !name.includes(street)) {
+             addressPart = `${street}, ${name}`;
+          } else {
+             addressPart = street || name; // Usa o que estiver disponível e mais completo
+          }
+
+          // Monta o endereço final
+          const formattedAddress = subregion ? `${addressPart} - ${subregion}` : addressPart;
+          
+          // Só preenche se o campo estiver vazio
           if (!formData.endereco) {
             setFormData(prev => ({ ...prev, endereco: formattedAddress }));
           }
