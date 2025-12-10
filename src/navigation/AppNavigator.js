@@ -9,8 +9,8 @@ import { useUser } from '../contexts/UserContext';
 import DashboardScreen from '../screens/main/DashboardScreen';
 import SettingsMenuScreen from '../screens/main/Settings/SettingsMenuScreen';
 import AccessibilityScreen from '../screens/main/Settings/AccessibilityScreen';
-import AboutScreen from '../screens/main/Settings/AboutScreen';
 import EditProfileScreen from '../screens/main/Settings/EditProfileScreen';
+import AboutScreen from '../screens/main/Settings/AboutScreen';
 import MyIncidentsScreen from '../screens/main/MyIncidentsScreen';
 import IncidentRegistrationScreen from '../screens/main/IncidentRegistrationScreen';
 import IncidentSuccessScreen from '../screens/main/IncidentSuccessScreen';
@@ -128,7 +128,6 @@ export default function AppNavigator() {
       {/* Rotas Placeholder (Futuras implementações) */}
       {/* REMOVIDO O EditProfile DUPLICADO DAQUI */}
       
-      {/* Rotas Placeholder (Futuras implementações) */}
       <Stack.Screen name="Notifications" component={DashboardScreen} options={{ title: 'Notificações' }} />
       <Stack.Screen name="ChangePassword" component={DashboardScreen} options={{ title: 'Segurança' }} />
     </Stack.Navigator>
