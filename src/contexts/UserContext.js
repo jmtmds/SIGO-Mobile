@@ -21,8 +21,16 @@ export const UserProvider = ({ children }) => {
     setUser(null);
   };
 
+  // Função para atualizar dados do perfil
+  const updateUser = (updatedData) => {
+    setUser(prevUser => ({
+      ...prevUser,
+      ...updatedData
+    }));
+  };
+
   return (
-    <UserContext.Provider value={{ user, signed: !!user, signIn, signOut }}>
+    <UserContext.Provider value={{ user, signed: !!user, signIn, signOut, updateUser }}>
       {children}
     </UserContext.Provider>
   );

@@ -9,6 +9,7 @@ import { useUser } from '../contexts/UserContext';
 import DashboardScreen from '../screens/main/DashboardScreen';
 import SettingsMenuScreen from '../screens/main/Settings/SettingsMenuScreen';
 import AccessibilityScreen from '../screens/main/Settings/AccessibilityScreen';
+import EditProfileScreen from '../screens/main/Settings/EditProfileScreen';
 import AboutScreen from '../screens/main/Settings/AboutScreen';
 import MyIncidentsScreen from '../screens/main/MyIncidentsScreen';
 import IncidentRegistrationScreen from '../screens/main/IncidentRegistrationScreen';
@@ -97,6 +98,7 @@ export default function AppNavigator() {
         component={SettingsMenuScreen}
         options={{ title: 'Configurações' }}
       />
+      
       <Stack.Screen
         name="Accessibility"
         component={AccessibilityScreen}
@@ -111,14 +113,21 @@ export default function AppNavigator() {
 
       {/* Tela de Sucesso na Ocorrência */}
       <Stack.Screen 
-       name="IncidentSuccess" 
-      component={IncidentSuccessScreen} 
-     options={{ headerShown: false }} // Sem cabeçalho, igual ao Figma
+        name="IncidentSuccess" 
+        component={IncidentSuccessScreen} 
+        options={{ headerShown: false }} // Sem cabeçalho, igual ao Figma
       />
 
+      {/* Tela de Perfil Real */}
+      <Stack.Screen 
+        name="EditProfile" 
+        component={EditProfileScreen} 
+        options={{ title: 'Meu Perfil' }} 
+      />
 
       {/* Rotas Placeholder (Futuras implementações) */}
-      <Stack.Screen name="EditProfile" component={DashboardScreen} options={{ title: 'Editar Perfil' }} />
+      {/* REMOVIDO O EditProfile DUPLICADO DAQUI */}
+      
       <Stack.Screen name="Notifications" component={DashboardScreen} options={{ title: 'Notificações' }} />
       <Stack.Screen name="ChangePassword" component={DashboardScreen} options={{ title: 'Segurança' }} />
     </Stack.Navigator>
