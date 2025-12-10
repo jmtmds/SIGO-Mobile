@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import { 
   View, Text, StyleSheet, FlatList, TouchableOpacity, 
-  RefreshControl, Alert, StatusBar, Modal, TextInput, ScrollView
+  RefreshControl, Alert, StatusBar, Modal, TextInput, ScrollView,
+  KeyboardAvoidingView, Platform // <--- IMPORTADO AQUI
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -96,7 +97,7 @@ export default function MyIncidentsScreen({ navigation }) {
         { text: "Cancelar", style: "cancel" },
         { 
           text: "Sim, Excluir", 
-          style: "destructive", // Fica vermelho no iOS
+          style: "destructive", 
           onPress: handleDelete 
         }
       ]
@@ -193,140 +194,144 @@ export default function MyIncidentsScreen({ navigation }) {
     return (
       <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: theme.mode === 'dark' ? '#1E1E1E' : '#FFFFFF' }]}>
-            
-            <View style={[styles.modalHeader, { backgroundColor: theme.primary }]}>
-              <Text style={[styles.modalTitle, { color: headerTextColor }]}>
-                {isEditing ? "Editar Ocorrência" : "Detalhes"}
-              </Text>
-              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
-                <Ionicons name="close" size={24} color={headerTextColor} />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+          {/* AQUI ESTÁ A CORREÇÃO: KeyboardAvoidingView ENVOLVENDO O MODAL CONTENT */}
+          <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.keyboardAvoidingView}
+          >
+            <View style={[styles.modalContent, { backgroundColor: theme.mode === 'dark' ? '#1E1E1E' : '#FFFFFF' }]}>
               
-              <View style={styles.detailRow}>
-                <View style={styles.labelContainer}>
-                  <Ionicons name="pricetag" size={16} color={theme.primary} style={styles.labelIcon} />
-                  <Text style={[styles.detailLabel, { color: theme.primary }]}>Categoria</Text>
-                </View>
-                <Text style={[styles.detailValue, { color: theme.text, fontWeight: 'bold', fontSize: 18 }]}>
-                  {selectedIncident && formatCategory(selectedIncident.categoria)}
+              <View style={[styles.modalHeader, { backgroundColor: theme.primary }]}>
+                <Text style={[styles.modalTitle, { color: headerTextColor }]}>
+                  {isEditing ? "Editar Ocorrência" : "Detalhes"}
                 </Text>
+                <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
+                  <Ionicons name="close" size={24} color={headerTextColor} />
+                </TouchableOpacity>
               </View>
 
-              <View style={styles.detailRow}>
-                <View style={styles.labelContainer}>
-                  <Ionicons name="alert-circle" size={16} color={theme.primary} style={styles.labelIcon} />
-                  <Text style={[styles.detailLabel, { color: theme.primary }]}>Prioridade</Text>
-                </View>
-                {isEditing ? (
-                  <View style={styles.prioritySelector}>
-                    {priorityOptions.map((opt) => {
-                      const isActive = editForm.prioridade === opt;
-                      const activeColor = getPriorityColor(opt);
-                      return (
-                        <TouchableOpacity key={opt}
-                          style={[styles.priorityOption, { borderColor: isActive ? activeColor : inactiveBorderColor, backgroundColor: isActive ? activeColor : 'transparent' }]}
-                          onPress={() => setEditForm({...editForm, prioridade: opt})}
-                        >
-                          <Text style={[styles.priorityOptionText, { color: isActive ? '#FFF' : inactiveTextColor }]}>{opt}</Text>
-                        </TouchableOpacity>
-                      )
-                    })}
+              <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+                
+                <View style={styles.detailRow}>
+                  <View style={styles.labelContainer}>
+                    <Ionicons name="pricetag" size={16} color={theme.primary} style={styles.labelIcon} />
+                    <Text style={[styles.detailLabel, { color: theme.primary }]}>Categoria</Text>
                   </View>
-                ) : (
-                  <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor(selectedIncident?.prioridade) }]}>
-                    <Text style={styles.priorityText}>{formatPriority(selectedIncident?.prioridade)}</Text>
+                  <Text style={[styles.detailValue, { color: theme.text, fontWeight: 'bold', fontSize: 18 }]}>
+                    {selectedIncident && formatCategory(selectedIncident.categoria)}
+                  </Text>
+                </View>
+
+                <View style={styles.detailRow}>
+                  <View style={styles.labelContainer}>
+                    <Ionicons name="alert-circle" size={16} color={theme.primary} style={styles.labelIcon} />
+                    <Text style={[styles.detailLabel, { color: theme.primary }]}>Prioridade</Text>
                   </View>
-                )}
-              </View>
-
-              <View style={styles.detailRow}>
-                <View style={styles.labelContainer}>
-                  <Ionicons name="location" size={16} color={theme.primary} style={styles.labelIcon} />
-                  <Text style={[styles.detailLabel, { color: theme.primary }]}>Endereço Completo</Text>
+                  {isEditing ? (
+                    <View style={styles.prioritySelector}>
+                      {priorityOptions.map((opt) => {
+                        const isActive = editForm.prioridade === opt;
+                        const activeColor = getPriorityColor(opt);
+                        return (
+                          <TouchableOpacity key={opt}
+                            style={[styles.priorityOption, { borderColor: isActive ? activeColor : inactiveBorderColor, backgroundColor: isActive ? activeColor : 'transparent' }]}
+                            onPress={() => setEditForm({...editForm, prioridade: opt})}
+                          >
+                            <Text style={[styles.priorityOptionText, { color: isActive ? '#FFF' : inactiveTextColor }]}>{opt}</Text>
+                          </TouchableOpacity>
+                        )
+                      })}
+                    </View>
+                  ) : (
+                    <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor(selectedIncident?.prioridade) }]}>
+                      <Text style={styles.priorityText}>{formatPriority(selectedIncident?.prioridade)}</Text>
+                    </View>
+                  )}
                 </View>
-                {isEditing ? (
-                   <TextInput 
-                     style={[styles.input, { color: theme.text, backgroundColor: inputBg, borderColor: inputBorder, minHeight: 60 }]}
-                     value={editForm.endereco} onChangeText={(t) => setEditForm({...editForm, endereco: t})} multiline
-                   />
-                ) : (
-                  <Text style={[styles.detailValue, { color: theme.text }]}>{selectedIncident?.endereco}</Text>
-                )}
-              </View>
 
-              <View style={styles.detailRow}>
-                <View style={styles.labelContainer}>
-                  <Ionicons name="map" size={16} color={theme.primary} style={styles.labelIcon} />
-                  <Text style={[styles.detailLabel, { color: theme.primary }]}>Ponto de Referência</Text>
+                <View style={styles.detailRow}>
+                  <View style={styles.labelContainer}>
+                    <Ionicons name="location" size={16} color={theme.primary} style={styles.labelIcon} />
+                    <Text style={[styles.detailLabel, { color: theme.primary }]}>Endereço Completo</Text>
+                  </View>
+                  {isEditing ? (
+                    <TextInput 
+                      style={[styles.input, { color: theme.text, backgroundColor: inputBg, borderColor: inputBorder, minHeight: 60 }]}
+                      value={editForm.endereco} onChangeText={(t) => setEditForm({...editForm, endereco: t})} multiline
+                    />
+                  ) : (
+                    <Text style={[styles.detailValue, { color: theme.text }]}>{selectedIncident?.endereco}</Text>
+                  )}
                 </View>
-                {isEditing ? (
-                   <TextInput 
-                     style={[styles.input, { color: theme.text, backgroundColor: inputBg, borderColor: inputBorder }]}
-                     value={editForm.ponto_referencia} onChangeText={(t) => setEditForm({...editForm, ponto_referencia: t})}
-                   />
-                ) : (
-                  <Text style={[styles.detailValue, { color: theme.text, fontStyle: selectedIncident?.ponto_referencia ? 'normal' : 'italic' }]}>
-                    {selectedIncident?.ponto_referencia || 'Não informado'}
-                  </Text>
-                )}
-              </View>
 
-              <View style={styles.detailRow}>
-                <View style={styles.labelContainer}>
-                  <Ionicons name="document-text" size={16} color={theme.primary} style={styles.labelIcon} />
-                  <Text style={[styles.detailLabel, { color: theme.primary }]}>Descrição do Fato</Text>
+                <View style={styles.detailRow}>
+                  <View style={styles.labelContainer}>
+                    <Ionicons name="map" size={16} color={theme.primary} style={styles.labelIcon} />
+                    <Text style={[styles.detailLabel, { color: theme.primary }]}>Ponto de Referência</Text>
+                  </View>
+                  {isEditing ? (
+                    <TextInput 
+                      style={[styles.input, { color: theme.text, backgroundColor: inputBg, borderColor: inputBorder }]}
+                      value={editForm.ponto_referencia} onChangeText={(t) => setEditForm({...editForm, ponto_referencia: t})}
+                    />
+                  ) : (
+                    <Text style={[styles.detailValue, { color: theme.text, fontStyle: selectedIncident?.ponto_referencia ? 'normal' : 'italic' }]}>
+                      {selectedIncident?.ponto_referencia || 'Não informado'}
+                    </Text>
+                  )}
                 </View>
+
+                <View style={styles.detailRow}>
+                  <View style={styles.labelContainer}>
+                    <Ionicons name="document-text" size={16} color={theme.primary} style={styles.labelIcon} />
+                    <Text style={[styles.detailLabel, { color: theme.primary }]}>Descrição do Fato</Text>
+                  </View>
+                  {isEditing ? (
+                    <TextInput 
+                      style={[styles.input, { color: theme.text, backgroundColor: inputBg, borderColor: inputBorder, minHeight: 100 }]}
+                      value={editForm.descricao} onChangeText={(t) => setEditForm({...editForm, descricao: t})} multiline textAlignVertical="top"
+                    />
+                  ) : (
+                    <Text style={[styles.detailValue, { color: theme.text, fontStyle: selectedIncident?.descricao ? 'normal' : 'italic' }]}>
+                      {selectedIncident?.descricao || 'Sem descrição detalhada.'}
+                    </Text>
+                  )}
+                </View>
+
+              </ScrollView>
+
+              <View style={styles.modalFooter}>
                 {isEditing ? (
-                   <TextInput 
-                     style={[styles.input, { color: theme.text, backgroundColor: inputBg, borderColor: inputBorder, minHeight: 100 }]}
-                     value={editForm.descricao} onChangeText={(t) => setEditForm({...editForm, descricao: t})} multiline textAlignVertical="top"
-                   />
+                  <>
+                    <TouchableOpacity style={[styles.modalBtn, styles.cancelBtn]} onPress={() => setIsEditing(false)}>
+                      <Text style={styles.cancelBtnText}>Cancelar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.modalBtn, styles.saveBtnPro, { backgroundColor: '#2ECC71' }]} onPress={handleSaveEdit}>
+                      <Text style={styles.saveBtnTextPro}>Salvar Alterações</Text>
+                    </TouchableOpacity>
+                  </>
                 ) : (
-                  <Text style={[styles.detailValue, { color: theme.text, fontStyle: selectedIncident?.descricao ? 'normal' : 'italic' }]}>
-                     {selectedIncident?.descricao || 'Sem descrição detalhada.'}
-                  </Text>
+                  <>
+                    <TouchableOpacity 
+                      style={[styles.modalBtn, { backgroundColor: '#E74C3C', flex: 1 }]} 
+                      onPress={confirmDelete}
+                    >
+                      <Ionicons name="trash-outline" size={20} color="#FFF" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                      style={[styles.modalBtn, { backgroundColor: theme.primary, flex: 4 }]} 
+                      onPress={() => setIsEditing(true)}
+                    >
+                      <Ionicons name="create" size={20} color={headerTextColor} style={{ marginRight: 8 }} />
+                      <Text style={[styles.modalBtnText, { color: headerTextColor }]}>Editar Ocorrência</Text>
+                    </TouchableOpacity>
+                  </>
                 )}
               </View>
 
-            </ScrollView>
-
-            <View style={styles.modalFooter}>
-              {isEditing ? (
-                <>
-                  <TouchableOpacity style={[styles.modalBtn, styles.cancelBtn]} onPress={() => setIsEditing(false)}>
-                    <Text style={styles.cancelBtnText}>Cancelar</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.modalBtn, styles.saveBtnPro, { backgroundColor: '#2ECC71' }]} onPress={handleSaveEdit}>
-                    <Text style={styles.saveBtnTextPro}>Salvar Alterações</Text>
-                  </TouchableOpacity>
-                </>
-              ) : (
-                <>
-                  {/* BOTÃO EXCLUIR */}
-                  <TouchableOpacity 
-                    style={[styles.modalBtn, { backgroundColor: '#E74C3C', flex: 1 }]} 
-                    onPress={confirmDelete}
-                  >
-                    <Ionicons name="trash-outline" size={20} color="#FFF" />
-                  </TouchableOpacity>
-
-                  {/* BOTÃO EDITAR */}
-                  <TouchableOpacity 
-                    style={[styles.modalBtn, { backgroundColor: theme.primary, flex: 4 }]} 
-                    onPress={() => setIsEditing(true)}
-                  >
-                    <Ionicons name="create" size={20} color={headerTextColor} style={{ marginRight: 8 }} />
-                    <Text style={[styles.modalBtnText, { color: headerTextColor }]}>Editar Ocorrência</Text>
-                  </TouchableOpacity>
-                </>
-              )}
             </View>
-
-          </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
     );
@@ -369,7 +374,13 @@ const styles = StyleSheet.create({
   emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingTop: 100 },
   
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', padding: 20 },
-  modalContent: { borderRadius: 20, maxHeight: '85%', overflow: 'hidden', shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.25, shadowRadius: 15, elevation: 10 },
+  // Estilo novo para o KeyboardAvoidingView
+  keyboardAvoidingView: { width: '100%', alignItems: 'center', justifyContent: 'center' },
+  
+  modalContent: { 
+    width: '100%',
+    borderRadius: 20, maxHeight: '85%', overflow: 'hidden', shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.25, shadowRadius: 15, elevation: 10 
+  },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20 },
   modalTitle: { fontSize: 22, fontWeight: 'bold', letterSpacing: 0.5 },
   closeButton: { padding: 5, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 20 },
@@ -386,12 +397,12 @@ const styles = StyleSheet.create({
   prioritySelector: { flexDirection: 'row', gap: 10, marginLeft: 24, marginTop: 5 },
   priorityOption: { flex: 1, paddingVertical: 10, borderRadius: 8, borderWidth: 1, alignItems: 'center' },
   priorityOptionText: { fontWeight: 'bold', fontSize: 14 },
+  
   input: { borderWidth: 1, borderRadius: 10, padding: 12, fontSize: 16, marginLeft: 24, textAlignVertical: 'top' },
   modalFooter: { flexDirection: 'row', gap: 10, padding: 20, borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.05)' },
   modalBtn: { paddingVertical: 15, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', elevation: 2 },
   cancelBtn: { flex: 1, backgroundColor: '#E0E0E0', borderWidth: 1, borderColor: '#CCC', elevation: 0 },
   cancelBtnText: { color: '#333', fontWeight: 'bold', fontSize: 14 },
-  
   saveBtnPro: { flex: 2, shadowColor: "#2ECC71", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 6 },
   saveBtnTextPro: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
   modalBtnText: { fontWeight: 'bold', fontSize: 16 },
