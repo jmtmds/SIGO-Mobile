@@ -97,18 +97,21 @@ export default function AppNavigator() {
         component={SettingsMenuScreen}
         options={{ title: 'Configurações' }}
       />
+      
       <Stack.Screen
         name="Accessibility"
         component={AccessibilityScreen}
         options={{ title: 'Acessibilidade' }}
       />
+      
       {/* Tela de Sucesso na Ocorrência */}
       <Stack.Screen 
-       name="IncidentSuccess" 
-      component={IncidentSuccessScreen} 
-     options={{ headerShown: false }} // Sem cabeçalho, igual ao Figma
-     
+        name="IncidentSuccess" 
+        component={IncidentSuccessScreen} 
+        options={{ headerShown: false }} // Sem cabeçalho, igual ao Figma
       />
+
+      {/* Tela de Perfil Real */}
       <Stack.Screen 
         name="EditProfile" 
         component={EditProfileScreen} 
@@ -116,7 +119,8 @@ export default function AppNavigator() {
       />
 
       {/* Rotas Placeholder (Futuras implementações) */}
-      <Stack.Screen name="EditProfile" component={DashboardScreen} options={{ title: 'Editar Perfil' }} />
+      {/* REMOVIDO O EditProfile DUPLICADO DAQUI */}
+      
       <Stack.Screen name="Notifications" component={DashboardScreen} options={{ title: 'Notificações' }} />
       <Stack.Screen name="ChangePassword" component={DashboardScreen} options={{ title: 'Segurança' }} />
     </Stack.Navigator>

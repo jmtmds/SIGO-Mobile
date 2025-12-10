@@ -106,7 +106,7 @@ export default function EditProfileScreen({ navigation }) {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, dynamicText(14, '600', theme.text)]}>Matrícula (Somente Leitura)</Text>
+              <Text style={[styles.label, dynamicText(14, '600', theme.text)]}>Matrícula</Text>
               <TextInput
                 style={[
                   styles.input, 
