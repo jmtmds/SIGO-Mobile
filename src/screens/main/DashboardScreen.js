@@ -6,26 +6,25 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '../../contexts/UserContext';
 import { useTheme } from '../../contexts/AccessibilityContext';
+import { useStats } from '../../contexts/StatsContext';
 import { API_URL } from '../../services/api';
 
 import CarlosImg from '../../assets/Carlos.jpg'; 
 
 export default function DashboardScreen({ navigation }) {
   const { user } = useUser();
-  const { theme, isHighContrast } = useTheme();
+  const { theme, isHighContrast, fontSizeLevel } = useTheme();
+  const { stats, updateStats } = useStats();
+  const styles = createStyles(fontSizeLevel);
   
   const [refreshing, setRefreshing] = useState(false);
-  const [stats, setStats] = useState({
-    ocorrenciasHoje: 0,
-    statusEquipe: 'Carregando...'
-  });
 
   const fetchDashboardData = async () => {
     try {
       const response = await fetch(`${API_URL}/dashboard/stats`);
       if (response.ok) {
         const data = await response.json();
-        setStats({
+        updateStats({
           ocorrenciasHoje: data.occurrences_today || 0,
           statusEquipe: data.team_status || 'Operacional'
         });
@@ -45,7 +44,6 @@ export default function DashboardScreen({ navigation }) {
     setRefreshing(false);
   }, []);
 
-  // Cores Base
   const primaryColor = theme.primary; 
   const isDarkMode = theme.background !== '#FFFFFF' || isHighContrast;
   
@@ -56,15 +54,13 @@ export default function DashboardScreen({ navigation }) {
   const textColor = theme.text;
   const subTextColor = isDarkMode ? '#AAAAAA' : '#666666';
   
-  // Cores do Header
-  const headerTextColor = isDarkMode ? '#000000' : '#FFFFFF'; // Se fundo escuro/contraste, texto preto
+  const headerTextColor = isDarkMode ? '#000000' : '#FFFFFF'; 
   const borderColor = '#FFFFFF';
 
   return (
     <View style={[styles.container, { backgroundColor: screenBg }]}>
       <StatusBar style="light" backgroundColor={primaryColor} />
       
-      {/* HEADER */}
       <View style={[styles.header, { backgroundColor: primaryColor }]}>
         <View style={styles.headerContent}>
           <View style={styles.profileContainer}>
@@ -94,7 +90,7 @@ export default function DashboardScreen({ navigation }) {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primaryColor} />}
         showsVerticalScrollIndicator={false}
       >
-        {/* CARDS DE STATUS */}
+
         <View style={styles.statsRow}>
           <View style={[
             styles.statCard, 
@@ -106,7 +102,7 @@ export default function DashboardScreen({ navigation }) {
             <Text style={[styles.statNumber, { color: primaryColor }]}>
               {stats.ocorrenciasHoje}
             </Text>
-            {/* MUDANÇA DE TEXTO AQUI: De "Hoje" para "Ativas" */}
+          
             <Text style={[styles.statLabel, { color: subTextColor }]}>Ocorrências Ativas</Text>
           </View>
 
@@ -117,14 +113,13 @@ export default function DashboardScreen({ navigation }) {
             <View style={[styles.iconCircle, { backgroundColor: 'rgba(46, 204, 113, 0.1)' }]}>
               <Ionicons name="people" size={28} color="#2ECC71" />
             </View>
-            <Text style={[styles.statNumber, { color: '#2ECC71', fontSize: 20 }]}>
+            <Text style={[styles.statNumber, { color: '#2ECC71' }]}>
               {stats.statusEquipe}
             </Text>
             <Text style={[styles.statLabel, { color: subTextColor }]}>Status Equipe</Text>
           </View>
         </View>
 
-        {/* MENU DE AÇÕES */}
         <Text style={[styles.sectionTitle, { color: textColor }]}>Painel de Controle</Text>
         
         <View style={styles.actionsContainer}>
@@ -178,18 +173,64 @@ export default function DashboardScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (fontSizeLevel) => StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingTop: 20, paddingBottom: 20, paddingHorizontal: 25, elevation: 8, zIndex: 10 },
+  header: { 
+    paddingTop: 20, 
+    paddingBottom: 20 + (fontSizeLevel > 1 ? fontSizeLevel * 5 : 0), 
+    paddingHorizontal: 25, 
+    elevation: 8, 
+    zIndex: 10 
+  },
   headerContent: { flexDirection: 'row', alignItems: 'center' },
   profileContainer: { position: 'relative' },
-  profileImage: { width: 100, height: 100, borderRadius: 20, borderWidth: 2 },
-  profileOnlineIndicator: { position: 'absolute', bottom: 0, right: 0, width: 15, height: 15, borderRadius: 10, backgroundColor: '#2ECC71', borderWidth: 2 },
-  userInfo: { marginLeft: 22, flex: 1 },
-  headerWelcome: { fontSize: 14, fontWeight: '500', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 1 },
-  headerName: { fontSize: 26, fontWeight: 'bold', letterSpacing: 0.5 },
-  roleBadge: { marginTop: 8, paddingVertical: 4, paddingHorizontal: 12, borderRadius: 6, alignSelf: 'flex-start' },
-  headerRole: { color: '#FFD700', fontSize: 13, fontWeight: 'bold', textTransform: 'uppercase' },
+  profileImage: { 
+    width: 100, 
+    height: 100, 
+    borderRadius: 20, 
+    borderWidth: 2 
+  },
+  profileOnlineIndicator: { 
+    position: 'absolute', 
+    bottom: 0, 
+    right: 0, 
+    width: 15, 
+    height: 15, 
+    borderRadius: 10, 
+    backgroundColor: '#2ECC71', 
+    borderWidth: 2 
+  },
+  userInfo: { 
+    marginLeft: 22, 
+    flex: 1,
+    paddingVertical: fontSizeLevel > 1 ? fontSizeLevel * 2 : 0
+  },
+  headerWelcome: { 
+    fontSize: 12 * fontSizeLevel, 
+    fontWeight: '500', 
+    marginBottom: 4 + (fontSizeLevel > 1 ? fontSizeLevel * 2 : 0), 
+    textTransform: 'uppercase', 
+    letterSpacing: 1 
+  },
+  headerName: { 
+    fontSize: 22 * fontSizeLevel, 
+    fontWeight: 'bold', 
+    letterSpacing: 0.5,
+    lineHeight: 22 * fontSizeLevel * 1.2
+  },
+  roleBadge: { 
+    marginTop: 8 + (fontSizeLevel > 1 ? fontSizeLevel * 2 : 0), 
+    paddingVertical: 4 + (fontSizeLevel > 1 ? fontSizeLevel * 2 : 0), 
+    paddingHorizontal: 12 + (fontSizeLevel > 1 ? fontSizeLevel * 3 : 0), 
+    borderRadius: 6, 
+    alignSelf: 'flex-start' 
+  },
+  headerRole: { 
+    color: '#FFD700', 
+    fontSize: 11 * fontSizeLevel, 
+    fontWeight: 'bold', 
+    textTransform: 'uppercase' 
+  },
   
   header: {
     paddingTop: 20,
@@ -235,14 +276,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerWelcome: {
-    fontSize: 14,
+    fontSize: 12 * fontSizeLevel,
     fontWeight: '500',
     marginBottom: 4,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   headerName: {
-    fontSize: 26,
+    fontSize: 22 * fontSizeLevel,
     fontWeight: 'bold',
     letterSpacing: 0.5,
   },
@@ -259,33 +300,36 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   headerRole: {
-    fontSize: 13,
+    fontSize: 11 * fontSizeLevel,
     fontWeight: 'bold',
     textTransform: 'uppercase',
   },
 
   scrollContent: {
-    padding: 20,
+    padding: fontSizeLevel > 1.0 ? 20 + (fontSizeLevel * 3) : 20,
     paddingBottom: 40,
   },
 
   statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 18,
-    marginTop: 25,
-    marginBottom: 35,
+    flexDirection: fontSizeLevel >= 1.3 ? 'column' : 'row',
+    justifyContent: fontSizeLevel >= 1.3 ? 'center' : 'space-between',
+    gap: fontSizeLevel >= 1.3 ? 18 : 15,
+    marginTop: fontSizeLevel > 1.0 ? 25 + (fontSizeLevel * 3) : 25,
+    marginBottom: fontSizeLevel > 1.0 ? 35 + (fontSizeLevel * 5) : 35,
+    paddingHorizontal: fontSizeLevel >= 1.3 ? 15 : 0,
   },
   statCard: {
-    flex: 1,
+    flex: fontSizeLevel >= 1.3 ? 0 : 1,
+    width: fontSizeLevel >= 1.3 ? '100%' : 'auto',
     borderRadius: 16,
-    padding: 20,
+    padding: fontSizeLevel > 1.0 ? 20 + (fontSizeLevel * 3) : 20,
     alignItems: 'center',
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 12,
     elevation: 6,
+    minHeight: 120 + (fontSizeLevel > 1 ? fontSizeLevel * 15 : 0),
   },
   iconCircle: {
     width: 52,
@@ -301,30 +345,34 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   statNumber: {
-    fontSize: 28,
+    fontSize: 20 * fontSizeLevel,
     fontWeight: 'bold',
-    marginBottom: 4,
+    marginBottom: 4 + (fontSizeLevel > 1 ? fontSizeLevel * 2 : 0),
+    lineHeight: 20 * fontSizeLevel * 1.1,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 11 * fontSizeLevel,
     fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 11 * fontSizeLevel * 1.3,
   },
 
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 15 * fontSizeLevel,
     fontWeight: 'bold',
-    marginBottom: 15,
+    marginBottom: 15 + (fontSizeLevel > 1 ? fontSizeLevel * 3 : 0),
     marginLeft: 5,
+    lineHeight: 15 * fontSizeLevel * 1.2,
   },
   actionsContainer: {
-    gap: 18,
+    gap: 18 + (fontSizeLevel > 1 ? fontSizeLevel * 3 : 0),
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 18,
+    padding: 18 + (fontSizeLevel > 1 ? fontSizeLevel * 4 : 0),
     borderRadius: 16,
-    height: 85,
+    minHeight: 85 + (fontSizeLevel > 1 ? fontSizeLevel * 10 : 0),
   },
   shadowProp: {
     shadowColor: '#000',
@@ -339,7 +387,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 15,
+    marginRight: 15 + (fontSizeLevel > 1 ? fontSizeLevel * 2 : 0),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
@@ -348,13 +396,16 @@ const styles = StyleSheet.create({
   },
   actionTexts: {
     flex: 1,
+    paddingVertical: fontSizeLevel > 1 ? fontSizeLevel * 2 : 0,
   },
   actionTitle: {
-    fontSize: 16,
+    fontSize: 15 * fontSizeLevel,
     fontWeight: 'bold',
-    marginBottom: 2,
+    marginBottom: 2 + (fontSizeLevel > 1 ? fontSizeLevel * 1 : 0),
+    lineHeight: 15 * fontSizeLevel * 1.2,
   },
   actionSubtitle: {
-    fontSize: 13,
+    fontSize: 12 * fontSizeLevel,
+    lineHeight: 12 * fontSizeLevel * 1.3,
   },
 });
