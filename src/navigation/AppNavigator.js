@@ -8,8 +8,9 @@ import { useUser } from '../contexts/UserContext';
 
 import DashboardScreen from '../screens/main/DashboardScreen';
 import SettingsMenuScreen from '../screens/main/Settings/SettingsMenuScreen';
-import EditProfileScreen from '../screens/main/Settings/EditProfileScreen';
 import AccessibilityScreen from '../screens/main/Settings/AccessibilityScreen';
+import EditProfileScreen from '../screens/main/Settings/EditProfileScreen';
+import AboutScreen from '../screens/main/Settings/AboutScreen';
 import MyIncidentsScreen from '../screens/main/MyIncidentsScreen';
 import IncidentRegistrationScreen from '../screens/main/IncidentRegistrationScreen';
 import IncidentSuccessScreen from '../screens/main/IncidentSuccessScreen';
@@ -103,7 +104,13 @@ export default function AppNavigator() {
         component={AccessibilityScreen}
         options={{ title: 'Acessibilidade' }}
       />
-      
+
+      <Stack.Screen
+        name="About"
+        component={AboutScreen}
+        options={{ title: 'Sobre o App' }}
+      />
+
       {/* Tela de Sucesso na Ocorrência */}
       <Stack.Screen 
         name="IncidentSuccess" 

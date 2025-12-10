@@ -21,7 +21,7 @@ import carlosImg from '../../../assets/Carlos.jpg';
 
 export default function EditProfileScreen({ navigation }) {
   const { theme, fontSizeLevel, highContrast } = useTheme();
-  const { user } = useUser();
+  const { user, updateUser } = useUser();
   const [loading, setLoading] = useState(false);
 
   // Estados do formulário
@@ -39,8 +39,27 @@ export default function EditProfileScreen({ navigation }) {
 
   const handleSave = () => {
     setLoading(true);
-    // Simulação de delay de rede
+    
+    // Validação básica
+    if (!name.trim() || !email.trim() || !phone.trim()) {
+      setLoading(false);
+      Alert.alert('Erro', 'Preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    // Simula delay de rede e salva os dados
     setTimeout(() => {
+      // Atualiza o contexto do usuário com os novos dados
+      updateUser({
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        // Mantém outros dados existentes
+        id: user?.id,
+        role: user?.role,
+        matricula: user?.matricula
+      });
+
       setLoading(false);
       Alert.alert('Sucesso', 'Seus dados foram atualizados!', [
         { text: 'OK', onPress: () => navigation.goBack() }
