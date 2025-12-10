@@ -25,73 +25,90 @@ export default function MyIncidentsScreen({ navigation }) {
     }
   };
 
-  // Carrega sempre que a tela ganha foco
   useFocusEffect(
     useCallback(() => {
       loadIncidents();
     }, [])
   );
 
-  // Função para abrir o menu de mudança de status
   const handleStatusChange = (item) => {
     Alert.alert(
       "Atualizar Status",
-      `Ocorrência: ${item.categoria}`,
+      // Usa a formatação aqui também para o alerta ficar bonito
+      `Ocorrência: ${formatCategory(item.categoria)}`,
       [
         { text: "Cancelar", style: "cancel" },
-        { 
-          text: "Em Andamento", 
-          onPress: () => changeStatus(item.id, "Em Andamento") 
-        },
-        { 
-          text: "Finalizada", 
-          onPress: () => changeStatus(item.id, "Finalizada") 
-        }
+        { text: "Em Andamento", onPress: () => changeStatus(item.id, "Em Andamento") },
+        { text: "Finalizada", onPress: () => changeStatus(item.id, "Finalizada") }
       ]
     );
   };
 
   const changeStatus = async (id, newStatus) => {
     try {
-      // Atualiza visualmente na hora (Otimista)
       setIncidents(prev => prev.map(inc => 
         inc.id === id ? { ...inc, status: newStatus } : inc
       ));
-      
-      // Envia para o backend
       await updateIncidentStatus(id, newStatus);
     } catch (error) {
       Alert.alert("Erro", "Não foi possível atualizar o status.");
-      loadIncidents(); // Reverte se der erro
+      loadIncidents();
     }
   };
 
-  // Função para definir cor baseada no status
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Aberta': return '#E74C3C'; // Vermelho
-      case 'Em Andamento': return '#F1C40F'; // Amarelo/Dourado
-      case 'Finalizada': return '#2ECC71'; // Verde
+      case 'Aberta': return '#E74C3C'; 
+      case 'Em Andamento': return '#F1C40F';
+      case 'Finalizada': return '#2ECC71'; 
       default: return '#95A5A6';
     }
+  };
+
+  // --- NOVA FUNÇÃO DE TRADUÇÃO ---
+  const formatCategory = (categoryKey) => {
+    const categories = {
+      'fire': 'Incêndio',
+      'traffic_accident': 'Acidente de Trânsito',
+      'rescue': 'Resgate / Salvamento',
+      'medical_emergency': 'Emergência Médica',
+      'hazardous_material': 'Produtos Perigosos',
+      'natural_disaster': 'Desastre Natural',
+      'other': 'Outros'
+    };
+
+    // Retorna a tradução ou, se não achar, formata a chave original
+    return categories[categoryKey] || categoryKey
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   };
 
   const renderItem = ({ item }) => {
     const statusColor = getStatusColor(item.status);
     
+    // Escolhe ícone baseado na categoria (opcional, mas fica legal)
+    let iconName = 'alert-circle';
+    if (item.categoria === 'fire') iconName = 'flame';
+    else if (item.categoria === 'traffic_accident') iconName = 'car';
+    else if (item.categoria === 'medical_emergency') iconName = 'medkit';
+    else if (item.categoria === 'rescue') iconName = 'people';
+
     return (
       <TouchableOpacity 
         style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}
-        onPress={() => handleStatusChange(item)} // Clicar no card abre opções
+        onPress={() => handleStatusChange(item)}
         activeOpacity={0.7}
       >
         <View style={styles.cardHeader}>
           <View style={styles.categoryContainer}>
-            <Ionicons name="flame" size={20} color={theme.primary} />
-            <Text style={[styles.category, { color: theme.text }]}>{item.categoria}</Text>
+            <Ionicons name={iconName} size={20} color={theme.primary} />
+            {/* AQUI APLICAMOS A TRADUÇÃO */}
+            <Text style={[styles.category, { color: theme.text }]}>
+              {formatCategory(item.categoria)}
+            </Text>
           </View>
           
-          {/* BADGE DE STATUS */}
           <View style={[styles.statusBadge, { backgroundColor: statusColor + '20' }]}> 
             <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
             <Text style={[styles.statusText, { color: statusColor }]}>{item.status}</Text>
