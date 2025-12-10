@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { 
   View, Text, StyleSheet, FlatList, TouchableOpacity, 
   RefreshControl, Alert, StatusBar, Modal, TextInput, ScrollView,
-  KeyboardAvoidingView, Platform // <--- IMPORTADO AQUI
+  KeyboardAvoidingView, Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -95,11 +95,7 @@ export default function MyIncidentsScreen({ navigation }) {
       "Tem certeza que deseja apagar permanentemente esta ocorrência?",
       [
         { text: "Cancelar", style: "cancel" },
-        { 
-          text: "Sim, Excluir", 
-          style: "destructive", 
-          onPress: handleDelete 
-        }
+        { text: "Sim, Excluir", style: "destructive", onPress: handleDelete }
       ]
     );
   };
@@ -183,23 +179,45 @@ export default function MyIncidentsScreen({ navigation }) {
   };
 
   const renderDetailModal = () => {
-    const headerTextColor = isHighContrast ? '#000' : '#FFF';
-    const inputBg = theme.mode === 'dark' ? '#333' : '#F5F7FA';
-    const inputBorder = theme.mode === 'dark' ? '#555' : '#E0E0E0';
+    // --- LÓGICA DE CORES DO MODAL CORRIGIDA ---
     
-    const inactiveBorderColor = theme.mode === 'dark' ? '#FFF' : '#000';
-    const inactiveTextColor = theme.mode === 'dark' ? '#FFF' : '#000';
+    // Detecta se é tema escuro (pelo modo ou pela cor de fundo)
+    const isDarkTheme = theme.mode === 'dark' || theme.background === '#000000' || theme.background === '#121212';
+
+    // 1. Cor de Fundo do Modal
+    let modalBgColor = '#FFFFFF'; // Padrão Claro
+    if (isHighContrast) modalBgColor = '#000000'; // Preto Absoluto no Contraste
+    else if (isDarkTheme) modalBgColor = '#1E1E1E'; // Cinza Escuro no Modo Noturno
+
+    // 2. Cor do Texto
+    const contentTextColor = (isHighContrast || isDarkTheme) ? '#FFFFFF' : '#333333';
+    
+    // 3. Cores dos Inputs (Edição)
+    let inputBg = '#F5F7FA';
+    let inputBorder = '#E0E0E0';
+    
+    if (isHighContrast) {
+        inputBg = '#1A1A1A';
+        inputBorder = theme.primary; // Borda Amarela no contraste
+    } else if (isDarkTheme) {
+        inputBg = '#333333';
+        inputBorder = '#555555';
+    }
+
+    // 4. Header Text Color
+    const headerTextColor = isHighContrast ? '#000' : '#FFF';
+
     const priorityOptions = ['Baixa', 'Média', 'Alta'];
 
     return (
       <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalOverlay}>
-          {/* AQUI ESTÁ A CORREÇÃO: KeyboardAvoidingView ENVOLVENDO O MODAL CONTENT */}
           <KeyboardAvoidingView 
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.keyboardAvoidingView}
           >
-            <View style={[styles.modalContent, { backgroundColor: theme.mode === 'dark' ? '#1E1E1E' : '#FFFFFF' }]}>
+            {/* APLICAÇÃO DA COR DE FUNDO DINÂMICA AQUI */}
+            <View style={[styles.modalContent, { backgroundColor: modalBgColor }]}>
               
               <View style={[styles.modalHeader, { backgroundColor: theme.primary }]}>
                 <Text style={[styles.modalTitle, { color: headerTextColor }]}>
@@ -217,7 +235,7 @@ export default function MyIncidentsScreen({ navigation }) {
                     <Ionicons name="pricetag" size={16} color={theme.primary} style={styles.labelIcon} />
                     <Text style={[styles.detailLabel, { color: theme.primary }]}>Categoria</Text>
                   </View>
-                  <Text style={[styles.detailValue, { color: theme.text, fontWeight: 'bold', fontSize: 18 }]}>
+                  <Text style={[styles.detailValue, { color: contentTextColor, fontWeight: 'bold', fontSize: 18 }]}>
                     {selectedIncident && formatCategory(selectedIncident.categoria)}
                   </Text>
                 </View>
@@ -232,12 +250,27 @@ export default function MyIncidentsScreen({ navigation }) {
                       {priorityOptions.map((opt) => {
                         const isActive = editForm.prioridade === opt;
                         const activeColor = getPriorityColor(opt);
+                        // Borda inativa: Branca no escuro, Preta no claro
+                        const inactiveBorder = (isHighContrast || isDarkTheme) ? '#FFF' : '#000';
+                        const inactiveText = (isHighContrast || isDarkTheme) ? '#FFF' : '#000';
+
                         return (
                           <TouchableOpacity key={opt}
-                            style={[styles.priorityOption, { borderColor: isActive ? activeColor : inactiveBorderColor, backgroundColor: isActive ? activeColor : 'transparent' }]}
+                            style={[
+                              styles.priorityOption, 
+                              { 
+                                borderColor: isActive ? activeColor : inactiveBorder, 
+                                backgroundColor: isActive ? activeColor : 'transparent' 
+                              }
+                            ]}
                             onPress={() => setEditForm({...editForm, prioridade: opt})}
                           >
-                            <Text style={[styles.priorityOptionText, { color: isActive ? '#FFF' : inactiveTextColor }]}>{opt}</Text>
+                            <Text style={[
+                              styles.priorityOptionText, 
+                              { color: isActive ? '#FFF' : inactiveText }
+                            ]}>
+                              {opt}
+                            </Text>
                           </TouchableOpacity>
                         )
                       })}
@@ -256,11 +289,11 @@ export default function MyIncidentsScreen({ navigation }) {
                   </View>
                   {isEditing ? (
                     <TextInput 
-                      style={[styles.input, { color: theme.text, backgroundColor: inputBg, borderColor: inputBorder, minHeight: 60 }]}
+                      style={[styles.input, { color: contentTextColor, backgroundColor: inputBg, borderColor: inputBorder, minHeight: 60 }]}
                       value={editForm.endereco} onChangeText={(t) => setEditForm({...editForm, endereco: t})} multiline
                     />
                   ) : (
-                    <Text style={[styles.detailValue, { color: theme.text }]}>{selectedIncident?.endereco}</Text>
+                    <Text style={[styles.detailValue, { color: contentTextColor }]}>{selectedIncident?.endereco}</Text>
                   )}
                 </View>
 
@@ -271,11 +304,11 @@ export default function MyIncidentsScreen({ navigation }) {
                   </View>
                   {isEditing ? (
                     <TextInput 
-                      style={[styles.input, { color: theme.text, backgroundColor: inputBg, borderColor: inputBorder }]}
+                      style={[styles.input, { color: contentTextColor, backgroundColor: inputBg, borderColor: inputBorder }]}
                       value={editForm.ponto_referencia} onChangeText={(t) => setEditForm({...editForm, ponto_referencia: t})}
                     />
                   ) : (
-                    <Text style={[styles.detailValue, { color: theme.text, fontStyle: selectedIncident?.ponto_referencia ? 'normal' : 'italic' }]}>
+                    <Text style={[styles.detailValue, { color: contentTextColor, fontStyle: selectedIncident?.ponto_referencia ? 'normal' : 'italic' }]}>
                       {selectedIncident?.ponto_referencia || 'Não informado'}
                     </Text>
                   )}
@@ -288,11 +321,11 @@ export default function MyIncidentsScreen({ navigation }) {
                   </View>
                   {isEditing ? (
                     <TextInput 
-                      style={[styles.input, { color: theme.text, backgroundColor: inputBg, borderColor: inputBorder, minHeight: 100 }]}
+                      style={[styles.input, { color: contentTextColor, backgroundColor: inputBg, borderColor: inputBorder, minHeight: 100 }]}
                       value={editForm.descricao} onChangeText={(t) => setEditForm({...editForm, descricao: t})} multiline textAlignVertical="top"
                     />
                   ) : (
-                    <Text style={[styles.detailValue, { color: theme.text, fontStyle: selectedIncident?.descricao ? 'normal' : 'italic' }]}>
+                    <Text style={[styles.detailValue, { color: contentTextColor, fontStyle: selectedIncident?.descricao ? 'normal' : 'italic' }]}>
                       {selectedIncident?.descricao || 'Sem descrição detalhada.'}
                     </Text>
                   )}
@@ -374,7 +407,6 @@ const styles = StyleSheet.create({
   emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingTop: 100 },
   
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', padding: 20 },
-  // Estilo novo para o KeyboardAvoidingView
   keyboardAvoidingView: { width: '100%', alignItems: 'center', justifyContent: 'center' },
   
   modalContent: { 
