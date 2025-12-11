@@ -33,7 +33,7 @@ export default function SettingsMenuScreen({ navigation }) {
         <Text style={[styles.sectionTitle, { color: theme.textSecondary, marginTop: 30 }]}>PREFERÊNCIAS</Text>
         
         <MenuItem icon="eye-outline" title="Acessibilidade" route="Accessibility" />
-        <MenuItem icon="information-circle-outline" title="Sobre o App" />
+        <MenuItem icon="information-circle-outline" title="Sobre o App" route="About" />
       </ScrollView>
     </View>
   );

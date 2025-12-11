@@ -5,12 +5,15 @@ const UserContext = createContext({});
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null); 
 
-  const signIn = (userData) => {
-    // Atualizado para Carlos Ferreira
+  // Agora signIn recebe o objeto completo que veio do backend
+  const signIn = (apiResponse) => {
     setUser({ 
-      name: 'Carlos Ferreira', 
-      role: '2º Tenente',
-      matricula: userData?.matricula || '123456'
+      id: apiResponse.id,
+      name: apiResponse.name || 'Usuário', 
+      role: apiResponse.role || 'Bombeiro',
+      matricula: apiResponse.matricula,
+      email: apiResponse.email || '', 
+      phone: apiResponse.phone || ''
     }); 
   };
 
@@ -18,8 +21,16 @@ export const UserProvider = ({ children }) => {
     setUser(null);
   };
 
+  // Função para atualizar dados do perfil
+  const updateUser = (updatedData) => {
+    setUser(prevUser => ({
+      ...prevUser,
+      ...updatedData
+    }));
+  };
+
   return (
-    <UserContext.Provider value={{ user, signed: !!user, signIn, signOut }}>
+    <UserContext.Provider value={{ user, signed: !!user, signIn, signOut, updateUser }}>
       {children}
     </UserContext.Provider>
   );

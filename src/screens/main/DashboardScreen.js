@@ -1,248 +1,411 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
+import React, { useState, useEffect, useCallback } from 'react';
+import { 
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, 
+  RefreshControl, StatusBar, Image
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '../../contexts/UserContext';
 import { useTheme } from '../../contexts/AccessibilityContext';
+import { useStats } from '../../contexts/StatsContext';
+import { API_URL } from '../../services/api';
 
-import carlosImg from '../../assets/Carlos.jpg'; 
-
-// ActionCard atualizado com Rolagem Lateral no Texto
-const ActionCard = ({ title, subtitle, icon, onPress, isPrimary = false, theme, highContrast, dynamicText }) => (
-  <TouchableOpacity 
-    style={[
-      styles.actionCard, 
-      { 
-        backgroundColor: isPrimary ? theme.primary : theme.cardBackground,
-        borderColor: highContrast ? theme.border : (isPrimary ? 'transparent' : theme.border),
-        borderWidth: highContrast ? 2 : (isPrimary ? 0 : 1)
-      }
-    ]}
-    onPress={onPress}
-    activeOpacity={0.8}
-  >
-    {/* 1. Ícone Fixo na Esquerda */}
-    <View style={[
-      styles.iconCircle, 
-      { backgroundColor: isPrimary ? 'rgba(255,255,255,0.2)' : theme.inputBackground }
-    ]}>
-       <Ionicons 
-         name={icon} 
-         size={24} 
-         color={isPrimary ? (highContrast ? '#000' : '#FFF') : theme.primary} 
-       />
-    </View>
-
-    {/* 2. Texto com Rolagem Lateral (Ocupa o meio) */}
-    <ScrollView 
-      horizontal 
-      showsHorizontalScrollIndicator={true} // Mostra a barra lateral
-      persistentScrollbar={true}            // Tenta manter a barra visível (Android)
-      style={styles.textScroll}
-      contentContainerStyle={{ paddingRight: 10 }} // Espaço extra no fim do scroll
-    >
-      <View>
-        <Text style={dynamicText(16, 'bold', isPrimary ? (highContrast ? '#000' : '#FFF') : theme.text)}>
-          {title}
-        </Text>
-        {subtitle && (
-          <Text style={dynamicText(12, 'normal', isPrimary ? (highContrast ? '#000' : '#E0E7FF') : theme.textSecondary)}>
-            {subtitle}
-          </Text>
-        )}
-      </View>
-    </ScrollView>
-
-    {/* 3. Seta Fixa na Direita */}
-    <Ionicons 
-      name="chevron-forward" 
-      size={24} 
-      color={isPrimary ? (highContrast ? '#000' : '#FFF') : theme.textSecondary}
-      style={{ marginLeft: 8 }} 
-    />
-  </TouchableOpacity>
-);
+import CarlosImg from '../../assets/Carlos.jpg'; 
 
 export default function DashboardScreen({ navigation }) {
-  const { user } = useUser(); 
-  const { theme, fontSizeLevel, highContrast } = useTheme();
+  const { user } = useUser();
+  const { theme, isHighContrast, fontSizeLevel } = useTheme();
+  const { stats, updateStats } = useStats();
+  const styles = createStyles(fontSizeLevel);
+  
+  const [refreshing, setRefreshing] = useState(false);
 
-  const dynamicText = (size, weight = 'normal', color = theme.text) => ({
-    fontSize: size * fontSizeLevel,
-    fontWeight: weight,
-    color: color
-  });
+  const fetchDashboardData = async () => {
+    try {
+      const response = await fetch(`${API_URL}/dashboard/stats`);
+      if (response.ok) {
+        const data = await response.json();
+        updateStats({
+          ocorrenciasHoje: data.occurrences_today || 0,
+          statusEquipe: data.team_status || 'Operacional'
+        });
+      }
+    } catch (error) {
+      console.log('[Dashboard] Erro visual, mantendo dados anteriores');
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchDashboardData();
+    setRefreshing(false);
+  }, []);
+
+  const primaryColor = theme.primary; 
+  const isDarkMode = theme.background !== '#FFFFFF' || isHighContrast;
+  
+  const screenBg = isDarkMode ? theme.background : '#F4F6F9';
+  const cardBg = isDarkMode ? '#1E1E1E' : '#FFFFFF';
+  const secondaryButtonBg = isDarkMode ? '#333333' : '#FFFFFF'; 
+  const secondaryBorderColor = isDarkMode ? '#FFFFFF' : '#E5E7EB';
+  const textColor = theme.text;
+  const subTextColor = isDarkMode ? '#AAAAAA' : '#666666';
+  
+  const headerTextColor = isDarkMode ? '#000000' : '#FFFFFF'; 
+  const borderColor = '#FFFFFF';
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <StatusBar style={theme.statusBarStyle} />
+    <View style={[styles.container, { backgroundColor: screenBg }]}>
+      <StatusBar style="light" backgroundColor={primaryColor} />
+      
+      <View style={[styles.header, { backgroundColor: primaryColor }]}>
+        <View style={styles.headerContent}>
+          <View style={styles.profileContainer}>
+            <Image source={CarlosImg} style={[styles.profileImage, { borderColor }]} />
+            <View style={[styles.profileOnlineIndicator, { borderColor }]} />
+          </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        
-        {/* --- Perfil do Usuário --- */}
-        <View style={styles.profileContainer}>
-          <Image 
-            source={carlosImg} 
-            style={[styles.profileImage, { borderColor: theme.primary }]} 
-          />
+          <View style={styles.userInfo}>
+            <Text style={[
+              styles.headerWelcome, 
+              { color: isDarkMode ? '#000000' : 'rgba(255,255,255,0.9)' }
+            ]}>
+              Bem-vindo ao SIGO
+            </Text>
+            <Text style={[styles.headerName, { color: headerTextColor }]} numberOfLines={1}>
+              {user?.name || 'Carlos Ferreira'}
+            </Text>
+            <View style={[styles.roleBadge, { backgroundColor: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)' }]}>
+              <Text style={styles.headerRole}>{user?.role || '2º Tenente'}</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primaryColor} />}
+        showsVerticalScrollIndicator={false}
+      >
+
+        <View style={styles.statsRow}>
+          <View style={[
+            styles.statCard, 
+            { backgroundColor: cardBg }
+          ]}>
+            <View style={[styles.iconCircle, { backgroundColor: 'rgba(49, 70, 151, 0.1)' }]}>
+              <Ionicons name="alert-circle" size={28} color={primaryColor} />
+            </View>
+            <Text style={[styles.statNumber, { color: primaryColor }]}>
+              {stats.ocorrenciasHoje}
+            </Text>
           
-          {/* Texto do Perfil com Scroll também, caso aumente muito */}
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={true}
-            style={styles.profileTextScroll}
-          >
-            <View style={styles.profileTextContainer}>
-              <Text style={dynamicText(14, 'normal', theme.textSecondary)}>
-                Bem-vindo de volta,
-              </Text>
-              
-              <Text style={dynamicText(24, 'bold', theme.text)}>
-                {user?.name || 'Carlos Ferreira'}
-              </Text>
-              
-              <Text style={[styles.roleBadge, dynamicText(15, '600', theme.primary)]}>
-                {user?.role || '2º Tenente'}
-              </Text>
+            <Text style={[styles.statLabel, { color: subTextColor }]}>Ocorrências Ativas</Text>
+          </View>
+
+          <View style={[
+            styles.statCard, 
+            { backgroundColor: cardBg }
+          ]}>
+            <View style={[styles.iconCircle, { backgroundColor: 'rgba(46, 204, 113, 0.1)' }]}>
+              <Ionicons name="people" size={28} color="#2ECC71" />
             </View>
-          </ScrollView>
+            <Text style={[styles.statNumber, { color: '#2ECC71' }]}>
+              {stats.statusEquipe}
+            </Text>
+            <Text style={[styles.statLabel, { color: subTextColor }]}>Status Equipe</Text>
+          </View>
         </View>
 
-        {/* Linha Divisória */}
-        <View style={[styles.divider, { backgroundColor: theme.border }]} />
-
-        {/* --- Widget de Status --- */}
-        <View style={[styles.statusContainer, { backgroundColor: theme.cardBackground, borderColor: theme.border, borderWidth: 1 }]}>
-            <View style={styles.statusItem}>
-                <Text style={dynamicText(24, 'bold', theme.primary)}>03</Text>
-                <Text style={dynamicText(12, '600', theme.textSecondary)}>Ocorrências Hoje</Text>
-            </View>
-            <View style={[styles.verticalDivider, { backgroundColor: theme.border }]}/>
-            <View style={styles.statusItem}>
-                <Text style={dynamicText(24, 'bold', '#10B981')}>ON</Text>
-                <Text style={dynamicText(12, '600', theme.textSecondary)}>Status Equipe</Text>
-            </View>
-        </View>
-
-        {/* --- Lista de Ações --- */}
-        <View style={styles.actionsList}>
-          <Text style={[styles.sectionTitle, dynamicText(14, 'bold', theme.textSecondary)]}>
-            AÇÕES RÁPIDAS
-          </Text>
-
-          <ActionCard 
-            title="Minhas Ocorrências" 
-            subtitle="Histórico e atendimentos"
-            icon="list"
+        <Text style={[styles.sectionTitle, { color: textColor }]}>Painel de Controle</Text>
+        
+        <View style={styles.actionsContainer}>
+          <TouchableOpacity 
+            style={[styles.actionButton, styles.shadowProp, { backgroundColor: secondaryButtonBg, borderWidth: 1, borderColor: secondaryBorderColor }]}
             onPress={() => navigation.navigate('MyIncidents')}
-            theme={theme} highContrast={highContrast} dynamicText={dynamicText}
-          />
+            activeOpacity={0.7}
+          >
+            <View style={[styles.actionIconBox, { backgroundColor: '#6C757D' }]}>
+              <Ionicons name="list" size={24} color="#FFF" />
+            </View>
+            <View style={styles.actionTexts}>
+              <Text style={[styles.actionTitle, { color: textColor }]}>Minhas Ocorrências</Text>
+              <Text style={[styles.actionSubtitle, { color: subTextColor }]}>Visualize seu histórico</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={subTextColor} />
+          </TouchableOpacity>
 
-          <ActionCard 
-            title="Ajustes" 
-            subtitle="Configurações do aplicativo"
-            icon="settings-outline"
-            onPress={() => navigation.navigate('SettingsMenu')}
-            theme={theme} highContrast={highContrast} dynamicText={dynamicText}
-          />
+          <TouchableOpacity 
+            style={[styles.actionButton, styles.shadowProp, { backgroundColor: secondaryButtonBg, borderWidth: 1, borderColor: secondaryBorderColor }]}
+            onPress={() => navigation.navigate('SettingsMenu')} 
+            activeOpacity={0.7}
+          >
+            <View style={[styles.actionIconBox, { backgroundColor: '#6C757D' }]}>
+              <Ionicons name="settings-sharp" size={24} color="#FFF" />
+            </View>
+            <View style={styles.actionTexts}>
+              <Text style={[styles.actionTitle, { color: textColor }]}>Ajustes</Text>
+              <Text style={[styles.actionSubtitle, { color: subTextColor }]}>Configurações do app</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={subTextColor} />
+          </TouchableOpacity>
 
-          <ActionCard 
-            title="Nova Ocorrência" 
-            subtitle="Iniciar registro de emergência"
-            icon="add-circle"
-            isPrimary={true}
+          <TouchableOpacity 
+            style={[styles.actionButton, styles.shadowProp, { backgroundColor: primaryColor }]}
             onPress={() => navigation.navigate('IncidentRegistration')}
-            theme={theme} highContrast={highContrast} dynamicText={dynamicText}
-          />
-
+            activeOpacity={0.8}
+          >
+            <View style={[styles.actionIconBox, { backgroundColor: isHighContrast ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.2)' }]}>
+              <Ionicons name="add" size={30} color={isHighContrast ? '#000' : '#FFF'} />
+            </View>
+            <View style={styles.actionTexts}>
+              <Text style={[styles.actionTitle, { color: isHighContrast ? '#000' : '#FFF' }]}>Nova Ocorrência</Text>
+              <Text style={[styles.actionSubtitle, { color: isHighContrast ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.8)' }]}>Registrar novo chamado</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={isHighContrast ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)'} />
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (fontSizeLevel) => StyleSheet.create({
   container: { flex: 1 },
-  scrollContent: {
-    padding: 24,
+  header: { 
+    paddingTop: 20, 
+    paddingBottom: 20 + (fontSizeLevel > 1 ? fontSizeLevel * 5 : 0), 
+    paddingHorizontal: 25, 
+    elevation: 8, 
+    zIndex: 10 
+  },
+  headerContent: { flexDirection: 'row', alignItems: 'center' },
+  profileContainer: { position: 'relative' },
+  profileImage: { 
+    width: 100, 
+    height: 100, 
+    borderRadius: 20, 
+    borderWidth: 2 
+  },
+  profileOnlineIndicator: { 
+    position: 'absolute', 
+    bottom: 0, 
+    right: 0, 
+    width: 15, 
+    height: 15, 
+    borderRadius: 10, 
+    backgroundColor: '#2ECC71', 
+    borderWidth: 2 
+  },
+  userInfo: { 
+    marginLeft: 22, 
+    flex: 1,
+    paddingVertical: fontSizeLevel > 1 ? fontSizeLevel * 2 : 0
+  },
+  headerWelcome: { 
+    fontSize: 12 * fontSizeLevel, 
+    fontWeight: '500', 
+    marginBottom: 4 + (fontSizeLevel > 1 ? fontSizeLevel * 2 : 0), 
+    textTransform: 'uppercase', 
+    letterSpacing: 1 
+  },
+  headerName: { 
+    fontSize: 22 * fontSizeLevel, 
+    fontWeight: 'bold', 
+    letterSpacing: 0.5,
+    lineHeight: 22 * fontSizeLevel * 1.2
+  },
+  roleBadge: { 
+    marginTop: 8 + (fontSizeLevel > 1 ? fontSizeLevel * 2 : 0), 
+    paddingVertical: 4 + (fontSizeLevel > 1 ? fontSizeLevel * 2 : 0), 
+    paddingHorizontal: 12 + (fontSizeLevel > 1 ? fontSizeLevel * 3 : 0), 
+    borderRadius: 6, 
+    alignSelf: 'flex-start' 
+  },
+  headerRole: { 
+    color: '#FFD700', 
+    fontSize: 11 * fontSizeLevel, 
+    fontWeight: 'bold', 
+    textTransform: 'uppercase' 
   },
   
-  // Perfil
-  profileContainer: {
+  header: {
+    paddingTop: 20,
+    paddingBottom: 20,
+    paddingHorizontal: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    zIndex: 10,
+  },
+  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
-    gap: 20, 
+  },
+  profileContainer: {
+    position: 'relative',
   },
   profileImage: {
-    width: 85, 
-    height: 85,
-    borderRadius: 22, 
+    width: 100,
+    height: 100,
+    borderRadius: 24, 
     borderWidth: 2,
-    flexShrink: 0, // Impede que a imagem encolha
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  profileTextScroll: {
-    flex: 1, // Ocupa o resto do espaço lateral
+  profileOnlineIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 15,
+    height: 15,
+    borderRadius: 10,
+    backgroundColor: '#2ECC71',
+    borderWidth: 2,
   },
-  profileTextContainer: {
-    justifyContent: 'center',
+  userInfo: {
+    marginLeft: 22,
+    flex: 1,
   },
-  roleBadge: {
-    marginTop: 2,
-    opacity: 0.9,
-  },
-
-  divider: {
-    height: 1,
-    width: '100%',
-    marginBottom: 24,
-  },
-  
-  // Widget Status
-  statusContainer: {
-    flexDirection: 'row',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 30,
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  statusItem: {
-    alignItems: 'center',
-  },
-  verticalDivider: {
-    width: 1,
-    height: '80%',
-  },
-  
-  // Ações
-  actionsList: {
-    gap: 16,
-  },
-  sectionTitle: {
-    marginBottom: 8,
+  headerWelcome: {
+    fontSize: 12 * fontSizeLevel,
+    fontWeight: '500',
+    marginBottom: 4,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
-  actionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 20,
+  headerName: {
+    fontSize: 22 * fontSizeLevel,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  roleBadge: {
+    marginTop: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  headerRole: {
+    fontSize: 11 * fontSizeLevel,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+  },
+
+  scrollContent: {
+    padding: fontSizeLevel > 1.0 ? 20 + (fontSizeLevel * 3) : 20,
+    paddingBottom: 40,
+  },
+
+  statsRow: {
+    flexDirection: fontSizeLevel >= 1.3 ? 'column' : 'row',
+    justifyContent: fontSizeLevel >= 1.3 ? 'center' : 'space-between',
+    gap: fontSizeLevel >= 1.3 ? 18 : 15,
+    marginTop: fontSizeLevel > 1.0 ? 25 + (fontSizeLevel * 3) : 25,
+    marginBottom: fontSizeLevel > 1.0 ? 35 + (fontSizeLevel * 5) : 35,
+    paddingHorizontal: fontSizeLevel >= 1.3 ? 15 : 0,
+  },
+  statCard: {
+    flex: fontSizeLevel >= 1.3 ? 0 : 1,
+    width: fontSizeLevel >= 1.3 ? '100%' : 'auto',
     borderRadius: 16,
-    // Altura mínima garante que não fique espremido se tiver barra de rolagem
-    minHeight: 90, 
+    padding: fontSizeLevel > 1.0 ? 20 + (fontSizeLevel * 3) : 20,
+    alignItems: 'center',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 6,
+    minHeight: 120 + (fontSizeLevel > 1 ? fontSizeLevel * 15 : 0),
   },
   iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
-    flexShrink: 0, // Impede o ícone de esmagar
-    marginRight: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  textScroll: {
-    flex: 1, // Ocupa todo o espaço disponível entre ícone e seta
+  statNumber: {
+    fontSize: 20 * fontSizeLevel,
+    fontWeight: 'bold',
+    marginBottom: 4 + (fontSizeLevel > 1 ? fontSizeLevel * 2 : 0),
+    lineHeight: 20 * fontSizeLevel * 1.1,
+  },
+  statLabel: {
+    fontSize: 11 * fontSizeLevel,
+    fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 11 * fontSizeLevel * 1.3,
+  },
+
+  sectionTitle: {
+    fontSize: 15 * fontSizeLevel,
+    fontWeight: 'bold',
+    marginBottom: 15 + (fontSizeLevel > 1 ? fontSizeLevel * 3 : 0),
+    marginLeft: 5,
+    lineHeight: 15 * fontSizeLevel * 1.2,
+  },
+  actionsContainer: {
+    gap: 18 + (fontSizeLevel > 1 ? fontSizeLevel * 3 : 0),
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 18 + (fontSizeLevel > 1 ? fontSizeLevel * 4 : 0),
+    borderRadius: 16,
+    minHeight: 85 + (fontSizeLevel > 1 ? fontSizeLevel * 10 : 0),
+  },
+  shadowProp: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  actionIconBox: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15 + (fontSizeLevel > 1 ? fontSizeLevel * 2 : 0),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  actionTexts: {
+    flex: 1,
+    paddingVertical: fontSizeLevel > 1 ? fontSizeLevel * 2 : 0,
+  },
+  actionTitle: {
+    fontSize: 15 * fontSizeLevel,
+    fontWeight: 'bold',
+    marginBottom: 2 + (fontSizeLevel > 1 ? fontSizeLevel * 1 : 0),
+    lineHeight: 15 * fontSizeLevel * 1.2,
+  },
+  actionSubtitle: {
+    fontSize: 12 * fontSizeLevel,
+    lineHeight: 12 * fontSizeLevel * 1.3,
   },
 });
