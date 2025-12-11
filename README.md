@@ -1,75 +1,89 @@
-# Estrutura do Projeto Mobile SIGO (React Native)
+# SIGO Mobile 
 
-Olá equipe,
+![Status](https://img.shields.io/badge/status-em%20desenvolvimento-orange)
+![Tech](https://img.shields.io/badge/stack-React%20Native%20|%20Expo-blue)
+![Plataforma](https://img.shields.io/badge/plataforma-Android%20|%20iOS-gray)
+[![Licença](https://img.shields.io/badge/licen%C3%A7a-MIT-red)](./LICENSE)
 
-Este documento detalha a estrutura proposta de pastas e a arquitetura que vamos adotar para a versão mobile do nosso projeto SIGO. A ideia é manter uma organização clara, modular e consistente com o que já fizemos na versão web.
+Aplicativo móvel oficial do sistema SIGO para gestão, registro e acompanhamento de ocorrências de forma ágil e acessível.
 
-## Estrutura de Pastas Proposta
+---
 
-Aqui está a visão geral da estrutura de pastas proposta.
+## Sobre o Projeto
 
+O **SIGO Mobile** é a extensão móvel da plataforma SIGO, desenvolvida para permitir que usuários registrem e acompanhem ocorrências diretamente de seus smartphones.
+
+O foco principal do aplicativo é a **acessibilidade** e a facilidade de uso, permitindo o envio de informações detalhadas (fotos, localização e assinatura) para o sistema central.
+
+---
+
+## Funcionalidades
+
+* **Autenticação Segura:** Login integrado e persistência de sessão.
+* **Registro de Ocorrências:** Formulário completo para cadastro de novos incidentes.
+* **Geolocalização:** Captura automática da localização da ocorrência (via `expo-location`).
+* **Evidências Multimídia:** Anexo de fotos da galeria ou câmera (via `expo-image-picker`).
+* **Assinatura Digital:** Coleta de assinatura diretamente na tela (via `react-native-signature-canvas`).
+* **Meus Registros:** Histórico e visualização do status das ocorrências reportadas.
+* **Acessibilidade:** Controle de tamanho de fonte e contraste (via Context API).
+* **Exportação:** Geração e compartilhamento de relatórios/comprovantes (via `expo-print` e `expo-sharing`).
+
+---
+
+## Tecnologias Utilizadas
+
+O projeto foi construído utilizando o ecossistema **Expo** para garantir compatibilidade e agilidade no desenvolvimento.
+
+* **Core:** React Native, Expo, React 19.
+* **Navegação:** React Navigation v7 (Stack Navigator).
+* **Comunicação:** Axios (Consumo de API REST).
+* **Armazenamento:** Async Storage.
+* **UI/UX:** React Native SVG, React Native Screens, Safe Area Context.
+* **Recursos Nativos:**
+    * Câmera e Galeria
+    * Geolocalização (GPS)
+    * Sistema de Arquivos e Compartilhamento
+
+---
+
+## Como Executar Localmente
+
+**Pré-requisitos:**
+* [Node.js](https://nodejs.org/) instalado.
+* Dispositivo físico (com app **Expo Go**) ou Emulador (Android Studio/Xcode).
+
+### Passo 1: Clonar e instalar
+
+1. **Clone o repositório:**
+
+```bash
+git clone [https://github.com/jmtmds/sigo-mobile.git](https://github.com/jmtmds/sigo-mobile.git)
 ```
-sigo-mobile/
-├── src/
-│   ├── api/             # Equivalente à nossa pasta 'services'
-│   │   ├── OcorrenciasService.js
-│   │   └── UserProfileService.js
-│   │   └── index.js     # (Opcional) para exportar todos os serviços
-│   │
-│   ├── assets/          # Para imagens, ícones e fontes
-│   │   ├── fonts/
-│   │   └── images/
-│   │
-│   ├── components/      # Componentes de UI reutilizáveis (Botões, Inputs, Cards)
-│   │   ├── common/      # Componentes genéricos (Button.js, TextInput.js)
-│   │   └── layout/      # Componentes de estrutura (Header.js, Container.js)
-│   │
-│   ├── config/          # Configurações globais e variáveis de ambiente
-│   │   └── index.js
-│   │
-│   ├── contexts/        # Gerenciamento de estado global com Context API
-│   │   ├── UserContext.js
-│   │   └── AccessibilityContext.js
-│   │
-│   ├── hooks/           # Hooks customizados
-│   │   └── useSpeech.js
-│   │
-│   ├── navigation/      # Tudo relacionado à navegação do app
-│   │   ├── AppNavigator.js
-│   │   └── AuthNavigator.js
-│   │   └── index.js     # Roteador principal que decide entre Auth e App
-│   │
-│   ├── screens/         # As telas do aplicativo (equivalente a 'pages' na web)
-│   │   ├── Auth/        # Telas de autenticação
-│   │   │   ├── LoginScreen.js
-│   │   │   └── LoginScreen.style.js
-│   │   │
-│   │   ├── Main/        # Telas principais após o login
-│   │   │   ├── DashboardScreen.js
-│   │   │   └── ...
-│   │
-│   ├── styles/          # Estilos globais (cores, tipografia, espaçamentos)
-│   │   ├── colors.js
-│   │   └── typography.js
-│   │
-│   └── utils/           # Funções utilitárias
-│       └── permissions.js
-│
-├── App.js               # Ponto de entrada principal da aplicação
-└── package.json         # Dependências e scripts do projeto
+
+2. Acesse a pasta do projeto:
+
+```bash
+cd sigo-mobile
 ```
 
-## Detalhando Cada Pasta
+3. Instale as dependências:
 
-* **`src/`**: O coração do nosso código, assim como no projeto web.
-* **`api/`** (ou **`services/`**): Centraliza toda a comunicação com nosso backend. Manter o nome `services` pode ser uma boa ideia para manter a consistência entre os projetos. Aqui vamos adaptar as chamadas `fetch` ou `axios` para o ambiente React Native.
-* **`assets/`**: Para todas as mídias estáticas do app, como imagens, ícones e fontes customizadas.
-* **`components/`**: Guardará nossos componentes de UI reutilizáveis. Exemplos: `Button.js`, `Card.js`, `TextInput.js`. A subpasta `common/` pode ter componentes genéricos e a `layout/` componentes de estrutura como `Header.js`.
-* **`config/`**: Ótimo lugar para armazenar a URL base da nossa API, chaves de serviços e outras configurações que podem variar entre os ambientes (dev, prod).
-* **`contexts/`**: Perfeito para gerenciar estado global com a Context API. Aqui ficarão os providers de `UserContext`, `AccessibilityContext`, etc.
-* **`hooks/`**: Para nossos hooks customizados, mantendo a lógica reutilizável e isolada dos componentes.
-* **`navigation/`**: Essencial no React Native. Aqui definiremos as pilhas de navegação (telas de autenticação vs. telas principais) usando o **React Navigation**. O arquivo `index.js` principal conterá a lógica para exibir a rota de login ou a rota principal do app.
-* **`screens/`**: O equivalente à nossa pasta `pages` da web. Cada arquivo aqui representa uma tela inteira do app. Vamos adotar a prática de criar um arquivo de estilo (`.style.js`) para cada tela para manter o código JSX mais limpo.
-* **`styles/`**: Para definir constantes de design globais: nossa paleta de cores (`colors.js`), tamanhos de fontes (`typography.js`), etc. Isso garante a consistência visual do app.
-* **`utils/`**: Funções auxiliares e lógicas que podem ser reaproveitadas em várias partes do código.
-* **`App.js`**: Ponto de entrada da aplicação. Ele será responsável por renderizar o nosso navegador principal (de `src/navigation`) e por envolver toda a aplicação com os providers dos nossos contextos.
+```bash
+npm instal
+```
+
+### Passo 2: Configuração da API
+
+Verifique o arquivo src/services/api.js.
+
+Caso esteja rodando o backend localmente, lembre-se de alterar o baseURL para o IP da sua máquina (ex: http://192.168.x.x:PORTA), pois o emulador/celular não reconhece "localhost".
+
+### Passo 3: Rodar o App
+
+```bash
+npx expo start
+```
+
+Para rodar no celular: Escaneie o QR Code exibido no terminal com o app Expo Go.
+
+Para rodar no emulador: Pressione a (Android) ou i (iOS) no terminal.
